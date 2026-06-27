@@ -6,7 +6,7 @@ in vec3 FragPos;
 in vec2 TexCoords;
 
 uniform bool hasTexture;
-uniform sampler2D texture_diffuse1; // Matches the name set in Mesh::Draw()
+uniform sampler2D texture_diffuse1;
 
 void main() {
     vec3 objectColor;
