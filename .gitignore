@@ -1,0 +1,48 @@
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+CMakeUserPresets.json
+
+# --- IDE Files ---
+# CLion / IntelliJ
+.idea/
+*.iml
+
+# Visual Studio
+.vs/
+*.sdf
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+ipch/
+*.aps
+*.ncb
+*.opt
+*.plg
+*.bsc
+*.msp
+*.pdb
+*.sbr
+*.cachefile
+
+# VS Code
+.vscode/
+
+# Xcode
+*.xcodeproj/
+*.xcworkspace/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+xcuserdata/
