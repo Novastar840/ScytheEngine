@@ -20,9 +20,9 @@ namespace Scythe
         {
             spdlog::info("Deleting buffers of mesh");
         }
-        glDeleteVertexArrays(1, &m_VAO);
-        glDeleteBuffers(1, &m_VBO);
-        glDeleteBuffers(1, &m_EBO);
+        if (m_VAO) glDeleteVertexArrays(1, &m_VAO);
+        if (m_VBO) glDeleteBuffers(1, &m_VBO);
+        if (m_EBO) glDeleteBuffers(1, &m_EBO);
     }
 
     Mesh::Mesh(Mesh&& other) noexcept 
@@ -41,9 +41,9 @@ namespace Scythe
     Mesh& Mesh::operator=(Mesh&& other) noexcept {
         if (this != &other) {
             // Free existing resources
-            glDeleteVertexArrays(1, &m_VAO);
-            glDeleteBuffers(1, &m_VBO);
-            glDeleteBuffers(1, &m_EBO);
+            if (m_VAO) glDeleteVertexArrays(1, &m_VAO);
+            if (m_VBO) glDeleteBuffers(1, &m_VBO);
+            if (m_EBO) glDeleteBuffers(1, &m_EBO);
 
             // Transfer ownership
             m_Vertices = std::move(other.m_Vertices);
