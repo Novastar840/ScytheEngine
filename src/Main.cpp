@@ -1,64 +1,64 @@
 ﻿#include <filesystem>
 #include <glad/gl.h>
+#include <GLFW/glfw3.h> // Required for glfwGetTime() to calculate Delta Time
 #include <spdlog/spdlog.h>
 
 #include "Model.h"
 #include "Shader.h"
 #include "Window.h"
+#include "Camera.h"
+#include "GameObject.h"
 
-#include "glm/fwd.hpp"
-#include <glm/glm.hpp>                      // Core GLM (vec3, mat4)
-#include <glm/gtc/matrix_transform.hpp>     // lookAt, perspective, rotate, translate
-#include <glm/gtc/type_ptr.hpp>             // value_ptr
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-int main() {
+int main() 
+{
     Scythe::Window window(800, 600, "Scythe Engine");
+    Scythe::Camera camera("MainCamera", glm::vec3(0.0f, 0.5f, 2.0f));
     
-    spdlog::info("Working dir: {}", std::filesystem::current_path().string());
+    camera.SetPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
+    
+    camera.LookAtRotation(glm::vec3(0.0f, 0.4f, 0.0f)); 
+    
+    window.SetMainCamera(&camera);
+
+    spdlog::info("Working dir: {} ", std::filesystem::current_path().string());
     
     Scythe::Shader shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
-    //Scythe::Shader shader("assets/shaders/basic.vert", "assets/shaders/red.frag");
-    
-    Scythe::Model bunny("assets/models/stanford-bunny.obj");
-    spdlog::info("Model loaded");
-    
-    glm::mat4 view = glm::lookAt(
-        glm::vec3(0.0f, 0.5f, 2.0f),  // Camera position
-        glm::vec3(0.0f, 0.4f, 0.0f),  // Look at origin
-        glm::vec3(0.0f, 1.0f, 0.0f)   // Up vector
-    ); 
-    
-    glm::mat4 projection = glm::perspective(
-        glm::radians(45.0f),     // Field of View
-        800.0f / 600.0f,                // Aspect Ratio
-        0.1f,                           // Near clipping plane
-        100.0f                          // Far clipping plane
-    );
-    
     shader.Bind();
-    shader.SetMat4("uView", glm::value_ptr(view));
-    shader.SetMat4("uProjection", glm::value_ptr(projection));
     
+    Scythe::Model bunny("assets/models/stanford-bunny.obj", "StanfordBunny", glm::vec3(0.0f, -0.085f, 0.0f));
+    bunny.SetScale(5.f);
+    spdlog::info("Model loaded");
+
     glClearColor(0.2f, 0.2f, 0.3f, 1.0f); // dark blue-grey
-    float angle = 0.0f;
-    // Main loop
-    while (!window.ShouldClose()) {
+
+    float bunnyYaw = 0.0f;
+
+    // 5. Main Engine Loop
+    while (!window.ShouldClose()) 
+    {
+        // --- CALCULATE DELTA TIME ---
+        static double lastFrame = 0.0;
+        double currentFrame = glfwGetTime();
+        float deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         window.Clear();
-        shader.Bind();
 
-        // Create Model Matrix (Rotate and scale the model)
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -0.085f, 0.0f)); // Position
+        // --- UPDATE PHASE ---
+        bunnyYaw += 60.0f * deltaTime; 
+        bunny.SetRotation(glm::vec3(0.0f, bunnyYaw, 0.0f));
         
-        
-        angle += 0.01f;
-        model = glm::rotate(model, angle, glm::vec3(0.0f, 1.0f, 0.0f)); // Rotate around Y axis
-        
-        model = glm::scale(model, glm::vec3(5.f)); 
+        camera.Tick(deltaTime);
 
-        shader.SetMat4("uModel", glm::value_ptr(model));
+        // --- RENDER PHASE ---
+        shader.SetMat4("uView", glm::value_ptr(window.GetMainCamera()->GetViewMatrix()));
+        shader.SetMat4("uProjection", glm::value_ptr(window.GetMainCamera()->GetProjectionMatrix()));
+        
+        shader.SetMat4("uModel", glm::value_ptr(bunny.GetTransformMatrix()));
 
-        // Draw the loaded model
         bunny.Draw(shader);
         
         window.SwapBuffers();

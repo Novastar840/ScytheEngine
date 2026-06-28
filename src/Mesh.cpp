@@ -84,7 +84,6 @@ namespace Scythe
             else if(name == "texture_specular")
                 number = std::to_string(specularNr++);
 
-            // THIS IS WHY WE PASS THE SHADER: We set the sampler uniform to the texture unit 'i'
             shader.SetInt((name + number).c_str(), i);
 
             glBindTexture(GL_TEXTURE_2D, m_Textures[i].ID);

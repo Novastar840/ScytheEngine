@@ -6,11 +6,14 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
+#include "GameObject.h"
+
 namespace Scythe
 {
-    class Model {
+    class Model : public GameObject
+    {
     public:
-        Model(const std::string& path);
+        Model(const std::string& path, const std::string& name, glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f));
         void Draw(const Shader& shader) const;
 
     private:
