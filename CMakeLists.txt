@@ -8,15 +8,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON CACHE BOOL "" FORCE)
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 
-add_executable(EngineApp src/Main.cpp
-        src/Window.cpp
-        src/Window.h
-        src/Shader.h
-        src/Shader.cpp
-        src/Mesh.cpp
-        src/Mesh.h
-        src/Model.h
-        src/Model.cpp)
+file(GLOB_RECURSE ENGINE_SOURCES
+        CONFIGURE_DEPENDS
+        "src/*.cpp"
+        "src/*.h"
+)
+
+add_executable(EngineApp ${ENGINE_SOURCES})
 target_compile_options(EngineApp PRIVATE /W4)
 target_compile_definitions(EngineApp PRIVATE _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 
