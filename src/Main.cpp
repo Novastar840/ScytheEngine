@@ -1,6 +1,6 @@
 ﻿#include <filesystem>
 #include <glad/gl.h>
-#include <GLFW/glfw3.h> // Required for glfwGetTime() to calculate Delta Time
+#include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 
 #include "Model.h"
