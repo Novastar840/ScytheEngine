@@ -39,3 +39,4 @@ namespace Scythe
         // Defaults to OpenGL for now
         static API s_API;
     };
+}
