@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 project(ScytheEngine LANGUAGES CXX C)
 
+# Replace MSVC's default /W3 with /W4 to avoid D9025 warnings
+if(MSVC)
+    string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REPLACE "/W3" "/W4" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -15,7 +21,6 @@ file(GLOB_RECURSE ENGINE_SOURCES
 )
 
 add_executable(EngineApp ${ENGINE_SOURCES})
-target_compile_options(EngineApp PRIVATE /W4)
 target_compile_definitions(EngineApp PRIVATE _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 
 include(FetchContent)
