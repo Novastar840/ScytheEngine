@@ -48,3 +48,7 @@ ipch/
 xcuserdata/
 
 .proxyai
+
+out
+cmake-build-release
+cmake-build-debug
