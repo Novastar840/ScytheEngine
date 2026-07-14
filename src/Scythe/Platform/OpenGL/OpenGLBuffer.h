@@ -11,6 +11,7 @@ namespace Scythe
         
         void Bind() const override;
         void Unbind() const override;
+        void SetData(const void* data, uint32_t size) override;
         
         void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
         const BufferLayout& GetLayout() const override { return m_Layout; }

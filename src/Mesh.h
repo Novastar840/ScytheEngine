@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -8,6 +9,7 @@
 
 namespace Scythe
 {
+    class VertexArray;
     class Shader;
     
     
@@ -31,10 +33,11 @@ namespace Scythe
         std::vector<Vertex> m_Vertices;
         std::vector<unsigned int> m_Indices;
         std::vector<Texture> m_Textures;
-        unsigned int m_VAO;
+        
+        std::shared_ptr<VertexArray> m_VertexArray;
         
         Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
-        ~Mesh();
+        // ~Mesh();
         
         Mesh(const Mesh&) = delete;
         Mesh& operator=(const Mesh&) = delete;
@@ -43,8 +46,5 @@ namespace Scythe
         Mesh& operator=(Mesh&& other) noexcept;
         
         void Draw(const Shader& shader) const;
-    private:
-        unsigned int m_VBO, m_EBO;
-        void SetupMesh();
     };
 }

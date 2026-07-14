@@ -30,8 +30,11 @@ namespace Scythe
 
         static API GetAPI() { return s_API; }
         static void SetAPI(API api) { s_API = api; }
-
+        
+        static void Initialize() { s_Instance = Create(); s_Instance->Init(); }
+        static RendererAPI* Get() { return s_Instance.get(); }
     private:
         static API s_API;
+        static std::unique_ptr<RendererAPI> s_Instance;
     };
 }
