@@ -40,10 +40,7 @@ namespace Scythe
         
         glfwMakeContextCurrent(m_Window);
         
-        // --- ADD THIS: Link the C++ instance to the GLFW window ---
         glfwSetWindowUserPointer(m_Window, this);
-        
-        // --- ADD THIS: Register the resize callback ---
         glfwSetFramebufferSizeCallback(m_Window, FramebufferSizeCallback);
         
         int version = gladLoadGL(glfwGetProcAddress);
@@ -99,8 +96,6 @@ namespace Scythe
             float newAspectRatio = static_cast<float>(width) / static_cast<float>(height);
             m_MainCamera->SetAspectRatio(newAspectRatio);
         }
-        
-        spdlog::info("Window resized to {0}x{1}", width, height);
     }
 
     void Window::SetMainCamera(Camera* camera)
@@ -110,10 +105,8 @@ namespace Scythe
 
     void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height)
     {
-        // 1. Update the OpenGL Viewport (Fixes the bottom-left issue)
         glViewport(0, 0, width, height);
-
-        // 2. Get our Window instance and call the C++ method
+        
         Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
         if (win)
         {
