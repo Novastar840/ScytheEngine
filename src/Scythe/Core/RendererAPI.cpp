@@ -16,8 +16,6 @@ namespace Scythe
             return std::make_unique<OpenGLRendererAPI>();
             
         case API::Vulkan:   
-            // We will implement this in Phase 4. 
-            // Throwing an error prevents silent nullptr crashes later.
             throw std::runtime_error("Vulkan API is selected but not yet implemented!");
             
         case API::None:

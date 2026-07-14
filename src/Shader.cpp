@@ -18,8 +18,7 @@ namespace Scythe
         glAttachShader(m_RendererID, vs);
         glAttachShader(m_RendererID, fs);
         glLinkProgram(m_RendererID);
-
-        // Check for linking errors
+        
         int success;
         char infoLog[512];
         glGetProgramiv(m_RendererID, GL_LINK_STATUS, &success);
@@ -27,8 +26,6 @@ namespace Scythe
             glGetProgramInfoLog(m_RendererID, 512, NULL, infoLog);
             spdlog::error("Shader Program Linking Failed:\n{0}", infoLog);
         }
-
-        // Clean up individual shaders (they are now baked into the program)
         glDeleteShader(vs);
         glDeleteShader(fs);
     }

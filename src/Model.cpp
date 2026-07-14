@@ -2,7 +2,6 @@
 #include <spdlog/spdlog.h>
 #include <filesystem>
 
-// stb_image implementation (Include exactly ONCE in your project)
 #define STB_IMAGE_IMPLEMENTATION 
 #include "stb_image.h"
 #include <glad/gl.h>
@@ -31,7 +30,6 @@ namespace Scythe
             else if (nrComponents == 4) format = GL_RGBA;
 
             glBindTexture(GL_TEXTURE_2D, textureID);
-            // Upload pixels from RAM to GPU VRAM
             //TODO: Add sRGB support for internalFormat
             glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
             glGenerateMipmap(GL_TEXTURE_2D);
@@ -41,7 +39,7 @@ namespace Scythe
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-            stbi_image_free(data); // Free RAM copy, it's on the GPU now
+            stbi_image_free(data);
         }
         else
         {
@@ -105,8 +103,7 @@ namespace Scythe
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         std::vector<Texture> textures;
-
-        // 1. Extract Vertices
+        
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
             Vertex vertex;
@@ -138,8 +135,7 @@ namespace Scythe
             }
             vertices.push_back(vertex);
         }
-
-        // 2. Extract Indices
+        
         for (unsigned int i = 0; i < mesh->mNumFaces; i++)
         {
             aiFace face = mesh->mFaces[i];
@@ -148,8 +144,7 @@ namespace Scythe
                 indices.push_back(face.mIndices[j]);
             }
         }
-
-        // 3. Extract Textures from Materials
+        
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
         std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");

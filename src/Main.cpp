@@ -39,25 +39,21 @@ int main()
 	glClearColor(0.2f, 0.2f, 0.3f, 1.0f); // dark blue-grey
 
 	float bunnyYaw = 0.0f;
-
-	// 5. Main Engine Loop
+	
 	while (!window.ShouldClose())
 	{
-		// --- CALCULATE DELTA TIME ---
 		static double lastFrame = 0.0;
 		double currentFrame = glfwGetTime();
 		float deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
 		window.Clear();
-
-		// --- UPDATE PHASE ---
+		
 		bunnyYaw += 60.0f * deltaTime;
 		bunny.SetRotation(glm::vec3(0.0f, bunnyYaw, 0.0f));
 
 		camera.Tick(deltaTime);
-
-		// --- RENDER PHASE ---
+		
 		shader.SetMat4("uView", glm::value_ptr(window.GetMainCamera()->GetViewMatrix()));
 		shader.SetMat4("uProjection", glm::value_ptr(window.GetMainCamera()->GetProjectionMatrix()));
 
