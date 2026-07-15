@@ -47,7 +47,7 @@ int main()
 		float deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
-		window.Clear();
+		Scythe::RendererAPI::Get()->Clear();
 		
 		bunnyYaw += 60.0f * deltaTime;
 		bunny.SetRotation(glm::vec3(0.0f, bunnyYaw, 0.0f));

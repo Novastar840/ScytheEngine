@@ -7,6 +7,9 @@
 #include "Camera.h"
 #include <spdlog/spdlog.h>
 
+#include "Scythe/Core/GraphicsContext.h"
+#include "Scythe/Core/RendererAPI.h"
+
 namespace Scythe
 {
     static void GLFWErrorCallback(int error, const char* description)
@@ -26,9 +29,14 @@ namespace Scythe
             return;
         }
         
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL) {
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API); 
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        } else if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan) {
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        }
         
         m_Window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
         if (!m_Window)
@@ -43,18 +51,8 @@ namespace Scythe
         glfwSetWindowUserPointer(m_Window, this);
         glfwSetFramebufferSizeCallback(m_Window, FramebufferSizeCallback);
         
-        int version = gladLoadGL(glfwGetProcAddress);
-        if (version == 0)
-        {
-            spdlog::error("Failed to initialize GLAD");
-            return;
-        }
-        
-        glEnable(GL_DEPTH_TEST);
-        
-        glViewport(0, 0, width, height);
-        
-        spdlog::info("OpenGL version {0}", version);
+        m_Context = GraphicsContext::Create(m_Window);
+        m_Context->Init();
     }
 
     Window::~Window()
@@ -81,15 +79,11 @@ namespace Scythe
         glfwSwapBuffers(m_Window);
     }
 
-    void Window::Clear()
-    {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
     void Window::OnResize(int width, int height)
     {
         m_Width = width;
         m_Height = height;
+        m_Context->Resize(width, height);
         
         if (m_MainCamera && height != 0)
         {
@@ -105,8 +99,6 @@ namespace Scythe
 
     void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height)
     {
-        glViewport(0, 0, width, height);
-        
         Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
         if (win)
         {
