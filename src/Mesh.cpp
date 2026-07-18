@@ -1,9 +1,8 @@
 ﻿#include "Mesh.h"
 
-#include <glad/gl.h>
-
 #include "Scythe/Core/RendererAPI.h"
 #include "Scythe/Core/Shader.h"
+#include "Scythe/Core/Texture2D.h"
 #include "Scythe/Core/VertexArray.h"
 #include "spdlog/spdlog.h"
 
@@ -56,8 +55,6 @@ namespace Scythe
         unsigned int specularNr = 1;
 
         for(unsigned int i = 0; i < m_Textures.size(); i++) {
-            glActiveTexture(GL_TEXTURE0 + i); // Activate proper texture unit before binding
-            
             std::string number;
             std::string name = m_Textures[i].Type;
             if(name == "texture_diffuse")
@@ -67,14 +64,13 @@ namespace Scythe
 
             shader->SetInt((name + number).c_str(), i);
 
-            glBindTexture(GL_TEXTURE_2D, m_Textures[i].ID);
+            if (m_Textures[i].Image) {
+                m_Textures[i].Image->Bind(i);
+            }
         }
 
         // Draw mesh
         m_VertexArray->Bind();
         RendererAPI::Get()->DrawIndexed(m_VertexArray); 
-
-        // Reset active texture to 0 for good practice
-        glActiveTexture(GL_TEXTURE0);
     }
 }

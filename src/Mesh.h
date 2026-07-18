@@ -11,7 +11,8 @@ namespace Scythe
 {
     class Shader;
     class VertexArray;
-    class OpenGLShader;
+    // class OpenGLShader;
+    class Texture2D;
     
     
     struct Vertex
@@ -23,7 +24,7 @@ namespace Scythe
     
     struct Texture
     {
-        unsigned int ID;
+        std::shared_ptr<Texture2D> Image;
         std::string Type;
         std::string Path;
     };
