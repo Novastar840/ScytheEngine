@@ -25,6 +25,8 @@ namespace Scythe
         
         void OnResize(int width, int height);
         
+        double GetTime() const;
+        
         void SetMainCamera(Camera* camera);
         Camera* GetMainCamera() const { return m_MainCamera; }
     private:

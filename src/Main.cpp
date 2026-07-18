@@ -1,6 +1,4 @@
 ﻿#include <filesystem>
-#include <glad/gl.h>
-#include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
 
 #include "Model.h"
@@ -35,15 +33,15 @@ int main()
 	Scythe::Model bunny("assets/models/stanford-bunny.obj", "StanfordBunny", glm::vec3(0.0f, -0.085f, 0.0f));
 	bunny.SetScale(5.f);
 	spdlog::info("Model loaded");
-
-	glClearColor(0.2f, 0.2f, 0.3f, 1.0f); // dark blue-grey
-
+	
 	float bunnyYaw = 0.0f;
+	
+	Scythe::RendererAPI::Get()->SetClearColor(glm::vec4(0.2f, 0.2f, 0.3f, 1.0f));
 	
 	while (!window.ShouldClose())
 	{
-		static double lastFrame = 0.0;
-		double currentFrame = glfwGetTime();
+		static float lastFrame = 0.0;
+		float currentFrame = window.GetTime();
 		float deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 

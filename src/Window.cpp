@@ -92,6 +92,11 @@ namespace Scythe
         }
     }
 
+    double Window::GetTime() const
+    {
+        return glfwGetTime();
+    }
+
     void Window::SetMainCamera(Camera* camera)
     {
         m_MainCamera = camera;
