@@ -10,11 +10,13 @@
 
 namespace Scythe
 {
+    class Shader;
+
     class Model : public GameObject
     {
     public:
         Model(const std::string& path, const std::string& name, glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f));
-        void Draw(const Shader& shader) const;
+        void Draw(const std::shared_ptr<Shader>& shader) const;
 
     private:
         std::vector<Mesh> m_Meshes;

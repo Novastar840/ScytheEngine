@@ -9,8 +9,9 @@
 
 namespace Scythe
 {
-    class VertexArray;
     class Shader;
+    class VertexArray;
+    class OpenGLShader;
     
     
     struct Vertex
@@ -45,6 +46,6 @@ namespace Scythe
         Mesh(Mesh&& other) noexcept;
         Mesh& operator=(Mesh&& other) noexcept;
         
-        void Draw(const Shader& shader) const;
+        void Draw(const std::shared_ptr<Shader>& shader) const;
     };
 }

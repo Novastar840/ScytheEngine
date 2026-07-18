@@ -56,7 +56,7 @@ namespace Scythe
         loadModel(path);
     }
 
-    void Model::Draw(const Shader& shader) const
+    void Model::Draw(const std::shared_ptr<Shader>& shader) const
     {
         for (const auto& mesh : m_Meshes)
         {

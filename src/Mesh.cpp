@@ -1,9 +1,9 @@
 ﻿#include "Mesh.h"
 
-#include "shader.h"
 #include <glad/gl.h>
 
 #include "Scythe/Core/RendererAPI.h"
+#include "Scythe/Core/Shader.h"
 #include "Scythe/Core/VertexArray.h"
 #include "spdlog/spdlog.h"
 
@@ -48,9 +48,9 @@ namespace Scythe
         return *this;
     }
     
-    void Mesh::Draw(const Shader& shader) const
+    void Mesh::Draw(const std::shared_ptr<Shader>& shader) const
     {
-        shader.SetInt("hasTexture", m_Textures.empty() ? 0 : 1);
+        shader->SetInt("hasTexture", m_Textures.empty() ? 0 : 1);
 
         unsigned int diffuseNr  = 1;
         unsigned int specularNr = 1;
@@ -65,7 +65,7 @@ namespace Scythe
             else if(name == "texture_specular")
                 number = std::to_string(specularNr++);
 
-            shader.SetInt((name + number).c_str(), i);
+            shader->SetInt((name + number).c_str(), i);
 
             glBindTexture(GL_TEXTURE_2D, m_Textures[i].ID);
         }

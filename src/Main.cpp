@@ -4,7 +4,6 @@
 #include <spdlog/spdlog.h>
 
 #include "Model.h"
-#include "Shader.h"
 #include "Window.h"
 #include "Camera.h"
 #include "GameObject.h"
@@ -13,6 +12,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Scythe/Core/RendererAPI.h"
+#include "Scythe/Core/Shader.h"
 
 int main()
 {
@@ -29,8 +29,8 @@ int main()
 
 	spdlog::info("Working dir: {} ", std::filesystem::current_path().string());
 
-	Scythe::Shader shader("assets/shaders/basic.vert", "assets/shaders/basic.frag");
-	shader.Bind();
+	auto shader = Scythe::Shader::Create("assets/shaders/basic.vert", "assets/shaders/basic.frag");
+	shader->Bind();
 
 	Scythe::Model bunny("assets/models/stanford-bunny.obj", "StanfordBunny", glm::vec3(0.0f, -0.085f, 0.0f));
 	bunny.SetScale(5.f);
@@ -54,10 +54,10 @@ int main()
 
 		camera.Tick(deltaTime);
 		
-		shader.SetMat4("uView", glm::value_ptr(window.GetMainCamera()->GetViewMatrix()));
-		shader.SetMat4("uProjection", glm::value_ptr(window.GetMainCamera()->GetProjectionMatrix()));
+		shader->SetMat4("uView", glm::value_ptr(window.GetMainCamera()->GetViewMatrix()));
+		shader->SetMat4("uProjection", glm::value_ptr(window.GetMainCamera()->GetProjectionMatrix()));
 
-		shader.SetMat4("uModel", glm::value_ptr(bunny.GetTransformMatrix()));
+		shader->SetMat4("uModel", glm::value_ptr(bunny.GetTransformMatrix()));
 
 		bunny.Draw(shader);
 
