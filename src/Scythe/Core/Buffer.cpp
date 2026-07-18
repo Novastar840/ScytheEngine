@@ -1,4 +1,7 @@
 ﻿#include "Buffer.h"
+
+#include <stdexcept>
+
 #include "RendererAPI.h"
 #include "../Platform/OpenGL/OpenGLBuffer.h"
 
@@ -10,7 +13,8 @@ namespace Scythe
         {
             case RendererAPI::API::None: return nullptr;
             case RendererAPI::API::OpenGL: return std::make_shared<OpenGLVertexBuffer>(size);
-            case RendererAPI::API::Vulkan: return nullptr;
+            case RendererAPI::API::Vulkan: 
+                throw std::runtime_error("Vulkan VertexBuffer not yet implemented!");
         }
         return nullptr;
     }
@@ -21,7 +25,8 @@ namespace Scythe
         {
         case RendererAPI::API::None: return nullptr;
         case RendererAPI::API::OpenGL: return std::make_shared<OpenGLIndexBuffer>(indices, count);
-        case RendererAPI::API::Vulkan: return nullptr;
+        case RendererAPI::API::Vulkan: 
+                throw std::runtime_error("Vulkan IndexBuffer not yet implemented!");
         }
         return nullptr;
     }
