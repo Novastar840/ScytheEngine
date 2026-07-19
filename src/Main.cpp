@@ -16,7 +16,7 @@ int main()
 {
 	try 
 	{
-		Scythe::RendererAPI::SetAPI(Scythe::RendererAPI::API::Vulkan);
+		Scythe::RendererAPI::SetAPI(Scythe::RendererAPI::API::OpenGL);
 	
 		Scythe::Window window(800, 600, "Scythe Engine");
 		Scythe::RendererAPI::Initialize();
