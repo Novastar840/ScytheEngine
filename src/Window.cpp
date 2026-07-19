@@ -1,6 +1,5 @@
 ﻿#include "Window.h"
 
-#include <glad/gl.h>
 #define GLFW_INCLUDE_NONE
 
 #include <GLFW/glfw3.h>
@@ -46,8 +45,6 @@ namespace Scythe
             return;
         }
         
-        glfwMakeContextCurrent(m_Window);
-        
         glfwSetWindowUserPointer(m_Window, this);
         glfwSetFramebufferSizeCallback(m_Window, FramebufferSizeCallback);
         
@@ -76,7 +73,7 @@ namespace Scythe
 
     void Window::SwapBuffers()
     {
-        glfwSwapBuffers(m_Window);
+        m_Context->SwapBuffers();
     }
 
     void Window::OnResize(int width, int height)

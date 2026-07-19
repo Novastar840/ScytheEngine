@@ -14,6 +14,8 @@
 
 int main()
 {
+	Scythe::RendererAPI::SetAPI(Scythe::RendererAPI::API::OpenGL);
+	
 	Scythe::Window window(800, 600, "Scythe Engine");
 	Scythe::RendererAPI::Initialize();
 	
@@ -34,13 +36,13 @@ int main()
 	bunny.SetScale(5.f);
 	spdlog::info("Model loaded");
 	
-	float bunnyYaw = 0.0f;
-	
 	Scythe::RendererAPI::Get()->SetClearColor(glm::vec4(0.2f, 0.2f, 0.3f, 1.0f));
+	
+	float lastFrame = 0.0;
+	float bunnyYaw = 0.0f;
 	
 	while (!window.ShouldClose())
 	{
-		static float lastFrame = 0.0;
 		float currentFrame = window.GetTime();
 		float deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
