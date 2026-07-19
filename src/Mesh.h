@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -9,6 +10,9 @@
 namespace Scythe
 {
     class Shader;
+    class VertexArray;
+    // class OpenGLShader;
+    class Texture2D;
     
     
     struct Vertex
@@ -20,7 +24,7 @@ namespace Scythe
     
     struct Texture
     {
-        unsigned int ID;
+        std::shared_ptr<Texture2D> Image;
         std::string Type;
         std::string Path;
     };
@@ -31,10 +35,11 @@ namespace Scythe
         std::vector<Vertex> m_Vertices;
         std::vector<unsigned int> m_Indices;
         std::vector<Texture> m_Textures;
-        unsigned int m_VAO;
+        
+        std::shared_ptr<VertexArray> m_VertexArray;
         
         Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
-        ~Mesh();
+        // ~Mesh();
         
         Mesh(const Mesh&) = delete;
         Mesh& operator=(const Mesh&) = delete;
@@ -42,9 +47,6 @@ namespace Scythe
         Mesh(Mesh&& other) noexcept;
         Mesh& operator=(Mesh&& other) noexcept;
         
-        void Draw(const Shader& shader) const;
-    private:
-        unsigned int m_VBO, m_EBO;
-        void SetupMesh();
+        void Draw(const std::shared_ptr<Shader>& shader) const;
     };
 }

@@ -2,63 +2,18 @@
 #include <spdlog/spdlog.h>
 #include <filesystem>
 
-// stb_image implementation (Include exactly ONCE in your project)
-#define STB_IMAGE_IMPLEMENTATION 
-#include "stb_image.h"
-#include <glad/gl.h>
-
 #include "assimp/postprocess.h"
+#include "Scythe/Core/Texture2D.h"
 
 namespace Scythe
 {
-    // Helper function to load image pixels into an OpenGL Texture ID
-    unsigned int TextureFromFile(const char* path, const std::string& directory)
-    {
-        std::filesystem::path filePath = std::filesystem::path(directory) / path;
-        std::string filename = filePath.string();
-
-        unsigned int textureID;
-        glGenTextures(1, &textureID);
-
-        int width, height, nrComponents;
-        // stbi_load reads the image file from disk into RAM
-        unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
-        if (data)
-        {
-            GLenum format = GL_RGB;
-            if (nrComponents == 1) format = GL_RED;
-            else if (nrComponents == 3) format = GL_RGB;
-            else if (nrComponents == 4) format = GL_RGBA;
-
-            glBindTexture(GL_TEXTURE_2D, textureID);
-            // Upload pixels from RAM to GPU VRAM
-            //TODO: Add sRGB support for internalFormat
-            glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            stbi_image_free(data); // Free RAM copy, it's on the GPU now
-        }
-        else
-        {
-            spdlog::error("Texture failed to load at path: {}", filename);
-            stbi_image_free(data);
-        }
-
-        return textureID;
-    }
-
     Model::Model(const std::string& path, const std::string& name, glm::vec3 position)
         : GameObject(name, position)
     {
         loadModel(path);
     }
 
-    void Model::Draw(const Shader& shader) const
+    void Model::Draw(const std::shared_ptr<Shader>& shader) const
     {
         for (const auto& mesh : m_Meshes)
         {
@@ -105,8 +60,7 @@ namespace Scythe
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         std::vector<Texture> textures;
-
-        // 1. Extract Vertices
+        
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
             Vertex vertex;
@@ -138,8 +92,7 @@ namespace Scythe
             }
             vertices.push_back(vertex);
         }
-
-        // 2. Extract Indices
+        
         for (unsigned int i = 0; i < mesh->mNumFaces; i++)
         {
             aiFace face = mesh->mFaces[i];
@@ -148,8 +101,7 @@ namespace Scythe
                 indices.push_back(face.mIndices[j]);
             }
         }
-
-        // 3. Extract Textures from Materials
+        
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
         std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
@@ -182,8 +134,10 @@ namespace Scythe
             }
             if (!skip)
             {
+                std::filesystem::path filePath = std::filesystem::path(m_Directory) / str.C_Str();
+                
                 Texture texture;
-                texture.ID = TextureFromFile(str.C_Str(), m_Directory);
+                texture.Image = Texture2D::Create(filePath.string());
                 texture.Type = typeName;
                 texture.Path = str.C_Str();
                 textures.push_back(texture);

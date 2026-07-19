@@ -15,14 +15,12 @@ namespace Scythe
     public:
         Camera(const std::string& name, glm::vec3 position = glm::vec3(0.0f));
         ~Camera() override = default;
-
-        // --- Projection Setup ---
+        
         void SetPerspective(float fovDegrees, float aspectRatio, float nearPlane, float farPlane);
         void SetOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane);
         
         void SetAspectRatio(float aspectRatio);
-
-        // --- Matrix Getters (Your Renderer will need these) ---
+        
         glm::mat4 GetViewMatrix() const;
         glm::mat4 GetProjectionMatrix() const { return m_ProjectionMatrix; }
         glm::mat4 GetViewProjectionMatrix() const;
@@ -34,7 +32,6 @@ namespace Scythe
 
         glm::mat4 m_ProjectionMatrix;
         
-        // Cached variables to rebuild projection on window resize
         float m_Fov = 45.0f;
         float m_AspectRatio = 16.0f / 9.0f;
         float m_NearPlane = 0.1f;

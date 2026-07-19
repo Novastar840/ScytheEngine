@@ -1,8 +1,9 @@
 ﻿#include "Mesh.h"
 
-#include "shader.h"
-#include <glad/gl.h>
-
+#include "Scythe/Core/RendererAPI.h"
+#include "Scythe/Core/Shader.h"
+#include "Scythe/Core/Texture2D.h"
+#include "Scythe/Core/VertexArray.h"
 #include "spdlog/spdlog.h"
 
 namespace Scythe
@@ -10,73 +11,50 @@ namespace Scythe
     Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
     : m_Vertices(std::move(vertices)), m_Indices(std::move(indices)), m_Textures(std::move(textures))
     {
-        SetupMesh();
+        m_VertexArray = VertexArray::Create();
+        
+        auto vertexBuffer = VertexBuffer::Create(m_Vertices.size() * sizeof(Vertex));
+        vertexBuffer->SetData(m_Vertices.data(), m_Vertices.size() * sizeof(Vertex));
+        
+        vertexBuffer->SetLayout({
+            { ShaderDataType::Float3, "aPos" },
+            { ShaderDataType::Float3, "aNormal" },
+            { ShaderDataType::Float2, "aTexCoords" }
+        });
+        m_VertexArray->AddVertexBuffer(vertexBuffer);
+        
+        auto indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.size());
+        m_VertexArray->SetIndexBuffer(indexBuffer);
+        
         spdlog::info("Mesh setup completed");
-    }
-
-    Mesh::~Mesh()
-    {
-        if (m_VAO != 0)
-        {
-            spdlog::info("Deleting buffers of mesh");
-        }
-        if (m_VAO) glDeleteVertexArrays(1, &m_VAO);
-        if (m_VBO) glDeleteBuffers(1, &m_VBO);
-        if (m_EBO) glDeleteBuffers(1, &m_EBO);
     }
 
     Mesh::Mesh(Mesh&& other) noexcept 
         : m_Vertices(std::move(other.m_Vertices)),
           m_Indices(std::move(other.m_Indices)),
           m_Textures(std::move(other.m_Textures)),
-          m_VAO(other.m_VAO),
-          m_VBO(other.m_VBO),
-          m_EBO(other.m_EBO)
+          m_VertexArray(std::move(other.m_VertexArray))
     {
-        other.m_VAO = 0;
-        other.m_VBO = 0;
-        other.m_EBO = 0;
     }
 
     Mesh& Mesh::operator=(Mesh&& other) noexcept {
         if (this != &other) {
-            // Free existing resources
-            if (m_VAO) glDeleteVertexArrays(1, &m_VAO);
-            if (m_VBO) glDeleteBuffers(1, &m_VBO);
-            if (m_EBO) glDeleteBuffers(1, &m_EBO);
-
-            // Transfer ownership
             m_Vertices = std::move(other.m_Vertices);
             m_Indices = std::move(other.m_Indices);
             m_Textures = std::move(other.m_Textures);
-            
-            m_VAO = other.m_VAO;
-            m_VBO = other.m_VBO;
-            m_EBO = other.m_EBO;
-
-            // Invalidate source
-            other.m_VAO = 0;
-            other.m_VBO = 0;
-            other.m_EBO = 0;
+            m_VertexArray = std::move(other.m_VertexArray);
         }
         return *this;
     }
     
-    void Mesh::Draw(const Shader& shader) const
+    void Mesh::Draw(const std::shared_ptr<Shader>& shader) const
     {
-        if(!m_VAO)
-        {
-            spdlog::warn("Attempting to draw mesh without a VAO");
-        }
-        
-        shader.SetInt("hasTexture", m_Textures.empty() ? 0 : 1);
+        shader->SetInt("hasTexture", m_Textures.empty() ? 0 : 1);
 
         unsigned int diffuseNr  = 1;
         unsigned int specularNr = 1;
 
         for(unsigned int i = 0; i < m_Textures.size(); i++) {
-            glActiveTexture(GL_TEXTURE0 + i); // Activate proper texture unit before binding
-            
             std::string number;
             std::string name = m_Textures[i].Type;
             if(name == "texture_diffuse")
@@ -84,46 +62,15 @@ namespace Scythe
             else if(name == "texture_specular")
                 number = std::to_string(specularNr++);
 
-            shader.SetInt((name + number).c_str(), i);
+            shader->SetInt((name + number).c_str(), i);
 
-            glBindTexture(GL_TEXTURE_2D, m_Textures[i].ID);
+            if (m_Textures[i].Image) {
+                m_Textures[i].Image->Bind(i);
+            }
         }
 
         // Draw mesh
-        glBindVertexArray(m_VAO);
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_Indices.size()), GL_UNSIGNED_INT, nullptr);
-        glBindVertexArray(0);
-
-        // Reset active texture to 0 for good practice
-        glActiveTexture(GL_TEXTURE0);
-    }
-
-    void Mesh::SetupMesh()
-    {
-        glGenVertexArrays(1, &m_VAO);
-        glGenBuffers(1, &m_VBO);
-        glGenBuffers(1, &m_EBO);
-        
-        glBindVertexArray(m_VAO);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-        glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizei>(m_Vertices.size() * sizeof(Vertex)), &m_Vertices[0], GL_STATIC_DRAW);
-        
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizei>(m_Indices.size() * sizeof(unsigned int)), &m_Indices[0], GL_STATIC_DRAW);
-        
-        // Vertex Positions (Location 0)
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-        
-        // Vertex Normals (Location 1)
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
-        
-        // Vertex Texture Coords (Location 2)
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
-
-        glBindVertexArray(0);
+        m_VertexArray->Bind();
+        RendererAPI::Get()->DrawIndexed(m_VertexArray); 
     }
 }

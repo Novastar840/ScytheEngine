@@ -1,11 +1,13 @@
 ﻿#include "Window.h"
 
-#include <glad/gl.h>
 #define GLFW_INCLUDE_NONE
 
 #include <GLFW/glfw3.h>
 #include "Camera.h"
 #include <spdlog/spdlog.h>
+
+#include "Scythe/Core/GraphicsContext.h"
+#include "Scythe/Core/RendererAPI.h"
 
 namespace Scythe
 {
@@ -26,9 +28,14 @@ namespace Scythe
             return;
         }
         
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        if (RendererAPI::GetAPI() == RendererAPI::API::OpenGL) {
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API); 
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        } else if (RendererAPI::GetAPI() == RendererAPI::API::Vulkan) {
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        }
         
         m_Window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
         if (!m_Window)
@@ -38,26 +45,11 @@ namespace Scythe
             return;
         }
         
-        glfwMakeContextCurrent(m_Window);
-        
-        // --- ADD THIS: Link the C++ instance to the GLFW window ---
         glfwSetWindowUserPointer(m_Window, this);
-        
-        // --- ADD THIS: Register the resize callback ---
         glfwSetFramebufferSizeCallback(m_Window, FramebufferSizeCallback);
         
-        int version = gladLoadGL(glfwGetProcAddress);
-        if (version == 0)
-        {
-            spdlog::error("Failed to initialize GLAD");
-            return;
-        }
-        
-        glEnable(GL_DEPTH_TEST);
-        
-        glViewport(0, 0, width, height);
-        
-        spdlog::info("OpenGL version {0}", version);
+        m_Context = GraphicsContext::Create(m_Window);
+        m_Context->Init();
     }
 
     Window::~Window()
@@ -81,26 +73,25 @@ namespace Scythe
 
     void Window::SwapBuffers()
     {
-        glfwSwapBuffers(m_Window);
-    }
-
-    void Window::Clear()
-    {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        m_Context->SwapBuffers();
     }
 
     void Window::OnResize(int width, int height)
     {
         m_Width = width;
         m_Height = height;
+        m_Context->Resize(width, height);
         
         if (m_MainCamera && height != 0)
         {
             float newAspectRatio = static_cast<float>(width) / static_cast<float>(height);
             m_MainCamera->SetAspectRatio(newAspectRatio);
         }
-        
-        spdlog::info("Window resized to {0}x{1}", width, height);
+    }
+
+    double Window::GetTime() const
+    {
+        return glfwGetTime();
     }
 
     void Window::SetMainCamera(Camera* camera)
@@ -110,10 +101,6 @@ namespace Scythe
 
     void Window::FramebufferSizeCallback(GLFWwindow* window, int width, int height)
     {
-        // 1. Update the OpenGL Viewport (Fixes the bottom-left issue)
-        glViewport(0, 0, width, height);
-
-        // 2. Get our Window instance and call the C++ method
         Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
         if (win)
         {
