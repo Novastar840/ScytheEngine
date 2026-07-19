@@ -21,6 +21,6 @@ namespace Scythe
         virtual void SetVec4(const std::string& name, const glm::vec4& value) const = 0;
         virtual void SetMat4(const std::string& name, const float* value) const = 0;
         
-        static std::shared_ptr<Shader> Create(const std::string& name, const std::string& fragmentPath);
+        static std::shared_ptr<Shader> Create(const std::string& vertexPath, const std::string& fragmentPath);
     };
 }

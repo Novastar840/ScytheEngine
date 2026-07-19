@@ -18,7 +18,6 @@ namespace Scythe
 
         virtual const std::string& GetPath() const = 0;
 
-        // Factory method
         static std::shared_ptr<Texture2D> Create(const std::string& path);
     };
 }
