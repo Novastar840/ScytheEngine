@@ -10,11 +10,11 @@ namespace Scythe
     std::shared_ptr<VertexArray> VertexArray::Create()
     {
         switch (RendererAPI::GetAPI()) {
-        case RendererAPI::API::None:    return nullptr;
-        case RendererAPI::API::OpenGL:  return std::make_shared<OpenGLVertexArray>();
-        case RendererAPI::API::Vulkan:  
-                throw std::runtime_error("Vulkan VertexArray not yet implemented!");
+            case RendererAPI::API::OpenGL:
+                return std::make_shared<OpenGLVertexArray>();
+            case RendererAPI::API::Vulkan:
+                throw std::runtime_error("Vulkan Backend is not yet implemented!");
         }
-        return nullptr;
+        throw std::runtime_error("Unknown RendererAPI!");
     }
 }

@@ -12,10 +12,11 @@ namespace Scythe
     {
         switch (RendererAPI::GetAPI())
         {
-        case RendererAPI::API::None:    return nullptr;
-        case RendererAPI::API::OpenGL:  return std::make_unique<OpenGLContext>(static_cast<GLFWwindow*>(window));
-        case RendererAPI::API::Vulkan:  throw std::runtime_error("Vulkan Context not yet implemented!");
+        case RendererAPI::API::OpenGL:  
+            return std::make_unique<OpenGLContext>(static_cast<GLFWwindow*>(window));
+        case RendererAPI::API::Vulkan:  
+            throw std::runtime_error("Vulkan Context not yet implemented!");
         }
-        return nullptr;
+        throw std::runtime_error("Unknown RendererAPI!");
     }
 }

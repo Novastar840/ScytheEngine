@@ -10,17 +10,13 @@ namespace Scythe
     
     std::unique_ptr<RendererAPI> RendererAPI::Create() 
     {
-        switch (s_API) 
+        switch (s_API)
         {
         case API::OpenGL:   
             return std::make_unique<OpenGLRendererAPI>();
-            
         case API::Vulkan:   
             throw std::runtime_error("Vulkan API is selected but not yet implemented!");
-            
-        case API::None:
-        default: 
-            throw std::runtime_error("Unknown or unsupported RendererAPI!");
         }
+        throw std::runtime_error("Unknown RendererAPI!");
     }
 }

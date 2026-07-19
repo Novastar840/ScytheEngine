@@ -11,23 +11,23 @@ namespace Scythe
     {
         switch (RendererAPI::GetAPI())
         {
-            case RendererAPI::API::None: return nullptr;
-            case RendererAPI::API::OpenGL: return std::make_shared<OpenGLVertexBuffer>(size);
-            case RendererAPI::API::Vulkan: 
-                throw std::runtime_error("Vulkan VertexBuffer not yet implemented!");
+            case RendererAPI::API::OpenGL:
+                return std::make_shared<OpenGLVertexBuffer>(size);
+            case RendererAPI::API::Vulkan:
+                throw std::runtime_error("Vulkan Backend is not yet implemented!");
         }
-        return nullptr;
+        throw std::runtime_error("Unknown RendererAPI!");
     }
 
     std::shared_ptr<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t count)
     {
         switch (RendererAPI::GetAPI())
         {
-        case RendererAPI::API::None: return nullptr;
-        case RendererAPI::API::OpenGL: return std::make_shared<OpenGLIndexBuffer>(indices, count);
-        case RendererAPI::API::Vulkan: 
-                throw std::runtime_error("Vulkan IndexBuffer not yet implemented!");
+            case RendererAPI::API::OpenGL:
+                return std::make_shared<OpenGLIndexBuffer>(indices, count);
+            case RendererAPI::API::Vulkan:
+                throw std::runtime_error("Vulkan Backend is not yet implemented!");
         }
-        return nullptr;
+        throw std::runtime_error("Unknown RendererAPI!");
     }
 }

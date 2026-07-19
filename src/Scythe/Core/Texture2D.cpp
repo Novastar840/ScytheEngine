@@ -11,13 +11,11 @@ namespace Scythe
     {
         switch (RendererAPI::GetAPI())
         {
-        case RendererAPI::API::None:
-            return nullptr;
-        case RendererAPI::API::OpenGL:
-            return std::make_shared<OpenGLTexture2D>(path);
-        case RendererAPI::API::Vulkan:
-            throw std::runtime_error("Vulkan Texture2D not implemented yet");
+            case RendererAPI::API::OpenGL:
+                return std::make_shared<OpenGLTexture2D>(path);
+            case RendererAPI::API::Vulkan:
+                throw std::runtime_error("Vulkan Backend is not yet implemented!");
         }
-        return nullptr;
+        throw std::runtime_error("Unknown RendererAPI!");
     }
 }
