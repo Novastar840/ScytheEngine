@@ -21,7 +21,7 @@ namespace Scythe
     private:
         std::vector<Mesh> m_Meshes;
         std::string m_Directory;
-        std::vector<Texture> m_LoadedTextures; // Optimization: Prevents loading the same texture twice
+        std::vector<Texture> m_LoadedTextures;
         
         void loadModel(const std::string& path);
         void processNode(aiNode* node, const aiScene* scene);
