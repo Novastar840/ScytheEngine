@@ -57,7 +57,10 @@ FetchContent_MakeAvailable(spdlog)
 add_library(glad STATIC vendor/glad/src/gl.c)
 target_include_directories(glad PUBLIC vendor/glad/include)
 
-target_include_directories(EngineApp PUBLIC vendor/stb/include)
+target_include_directories(EngineApp PUBLIC 
+        vendor/stb/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/Scythe
+)
 
 target_link_libraries(EngineApp PRIVATE glfw glad spdlog::spdlog glm::glm assimp)
 
