@@ -1,9 +1,9 @@
 ﻿#include "Mesh.h"
 
-#include "Scythe/Core/RendererAPI.h"
-#include "Scythe/Core/Shader.h"
-#include "Scythe/Core/Texture2D.h"
-#include "Scythe/Core/VertexArray.h"
+#include "Core/RendererAPI.h"
+#include "Core/Shader.h"
+#include "Core/Texture2D.h"
+#include "Core/VertexArray.h"
 #include "spdlog/spdlog.h"
 
 namespace Scythe

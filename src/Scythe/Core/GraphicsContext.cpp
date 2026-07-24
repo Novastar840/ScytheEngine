@@ -1,7 +1,7 @@
 ﻿#include "GraphicsContext.h"
 
 #include <stdexcept>
-#include "../Platform/OpenGL/OpenGLContext.h"
+#include "Platform/OpenGL/OpenGLContext.h"
 #include "RendererAPI.h"
 
 struct GLFWwindow;

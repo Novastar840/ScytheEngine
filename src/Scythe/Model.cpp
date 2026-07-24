@@ -3,7 +3,7 @@
 #include <filesystem>
 
 #include "assimp/postprocess.h"
-#include "Scythe/Core/Texture2D.h"
+#include "Core/Texture2D.h"
 
 namespace Scythe
 {

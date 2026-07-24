@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "../../Core/VertexArray.h"
+#include "Core/VertexArray.h"
 
 namespace Scythe
 {

@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 #include "RendererAPI.h"
-#include "../Platform/OpenGL/OpenGLVertexArray.h"
+#include "Platform/OpenGL/OpenGLVertexArray.h"
 
 namespace Scythe
 {

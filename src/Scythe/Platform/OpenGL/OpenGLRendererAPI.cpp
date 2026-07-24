@@ -1,5 +1,5 @@
 ﻿#include "OpenGLRendererAPI.h"
-#include "../../Core/VertexArray.h"
+#include "Core/VertexArray.h"
 #include <glad/gl.h>
 
 namespace Scythe

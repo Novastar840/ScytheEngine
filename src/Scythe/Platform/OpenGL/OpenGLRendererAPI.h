@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "../../Core/RendererAPI.h"
+#include "Core/RendererAPI.h"
 
 namespace Scythe
 {

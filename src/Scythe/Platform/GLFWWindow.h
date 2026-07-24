@@ -2,7 +2,7 @@
 #include <memory>
 #include <string>
 
-#include "../Core/Window.h"
+#include "Core/Window.h"
 
 struct GLFWwindow;
 namespace Scythe

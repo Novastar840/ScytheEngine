@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <glad/gl.h>
 
-#include "../../Core/Shader.h"
+#include "Core/Shader.h"
 
 namespace Scythe
 {

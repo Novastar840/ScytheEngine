@@ -1,6 +1,6 @@
 ﻿#include "Shader.h"
 #include "RendererAPI.h"
-#include "../Platform/OpenGL/OpenGLShader.h"
+#include "Platform/OpenGL/OpenGLShader.h"
 #include <stdexcept>
 
 namespace Scythe {

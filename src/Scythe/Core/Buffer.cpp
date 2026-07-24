@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 #include "RendererAPI.h"
-#include "../Platform/OpenGL/OpenGLBuffer.h"
+#include "Platform/OpenGL/OpenGLBuffer.h"
 
 namespace Scythe
 {

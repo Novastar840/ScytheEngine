@@ -2,8 +2,8 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
-#include "../Core/GraphicsContext.h"
-#include "../Core/RendererAPI.h"
+#include "Core/GraphicsContext.h"
+#include "Core/RendererAPI.h"
 
 namespace Scythe
 {

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "../../Core/Texture2D.h"
+#include "Core/Texture2D.h"
 #include <glad/gl.h>
 
 namespace Scythe

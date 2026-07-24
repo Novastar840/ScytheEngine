@@ -2,15 +2,15 @@
 #include <spdlog/spdlog.h>
 
 #include "Model.h"
-#include "Scythe/Core/Window.h"
+#include "Core/Window.h"
 #include "Camera.h"
 #include "GameObject.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Scythe/Core/RendererAPI.h"
-#include "Scythe/Core/Shader.h"
+#include "Core/RendererAPI.h"
+#include "Core/Shader.h"
 
 int main()
 {
