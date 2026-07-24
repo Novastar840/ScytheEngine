@@ -2,7 +2,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Model.h"
-#include "Window.h"
+#include "Scythe/Core/Window.h"
 #include "Camera.h"
 #include "GameObject.h"
 
@@ -18,7 +18,7 @@ int main()
 	{
 		Scythe::RendererAPI::SetAPI(Scythe::RendererAPI::API::OpenGL);
 	
-		Scythe::Window window(800, 600, "Scythe Engine");
+		auto window = Scythe::Window::Create("EngineApp", 800, 600);
 		Scythe::RendererAPI::Initialize();
 	
 		Scythe::Camera camera("MainCamera", glm::vec3(0.0f, 0.5f, 2.0f));
@@ -27,7 +27,7 @@ int main()
 
 		camera.LookAtRotation(glm::vec3(0.0f, 0.4f, 0.0f));
 
-		window.SetMainCamera(&camera);
+		window->SetMainCamera(&camera);
 
 		spdlog::info("Working dir: {} ", std::filesystem::current_path().string());
 
@@ -43,9 +43,9 @@ int main()
 		float lastFrame = 0.0;
 		float bunnyYaw = 0.0f;
 		
-		while (!window.ShouldClose())
+		while (!window->ShouldClose())
 		{
-			float currentFrame = window.GetTime();
+			float currentFrame = window->GetTime();
 			float deltaTime = currentFrame - lastFrame;
 			lastFrame = currentFrame;
 
@@ -56,15 +56,15 @@ int main()
 
 			camera.Tick(deltaTime);
 		
-			shader->SetMat4("uView", glm::value_ptr(window.GetMainCamera()->GetViewMatrix()));
-			shader->SetMat4("uProjection", glm::value_ptr(window.GetMainCamera()->GetProjectionMatrix()));
+			shader->SetMat4("uView", glm::value_ptr(window->GetMainCamera()->GetViewMatrix()));
+			shader->SetMat4("uProjection", glm::value_ptr(window->GetMainCamera()->GetProjectionMatrix()));
 
 			shader->SetMat4("uModel", glm::value_ptr(bunny.GetTransformMatrix()));
 
 			bunny.Draw(shader);
 
-			window.SwapBuffers();
-			window.PollEvents();
+			window->SwapBuffers();
+			window->PollEvents();
 		}
 	}
 	catch (const std::exception& e)
