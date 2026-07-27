@@ -11,17 +11,22 @@
 
 #include "Core/RendererAPI.h"
 #include "Core/Shader.h"
+#include "Core/SubsystemManager.h"
+
+using namespace Scythe;
 
 int main()
 {
 	try 
 	{
-		Scythe::RendererAPI::SetAPI(Scythe::RendererAPI::API::OpenGL);
+		std::unique_ptr<SubsystemManager> subsystemManager = std::make_unique<SubsystemManager>();
+		
+		RendererAPI::SetAPI(RendererAPI::API::OpenGL);
 	
-		auto window = Scythe::Window::Create("EngineApp", 800, 600);
-		Scythe::RendererAPI::Initialize();
+		auto window = Window::Create("EngineApp", 800, 600);
+		RendererAPI::Initialize();
 	
-		Scythe::Camera camera("MainCamera", glm::vec3(0.0f, 0.5f, 2.0f));
+		Camera camera("MainCamera", glm::vec3(0.0f, 0.5f, 2.0f));
 
 		camera.SetPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
 
@@ -31,14 +36,14 @@ int main()
 
 		spdlog::info("Working dir: {} ", std::filesystem::current_path().string());
 
-		auto shader = Scythe::Shader::Create("assets/shaders/basic.vert", "assets/shaders/basic.frag");
+		auto shader = Shader::Create("assets/shaders/basic.vert", "assets/shaders/basic.frag");
 		shader->Bind();
 
-		Scythe::Model bunny("assets/models/stanford-bunny.obj", "StanfordBunny", glm::vec3(0.0f, -0.085f, 0.0f));
+		Model bunny("assets/models/stanford-bunny.obj", "StanfordBunny", glm::vec3(0.0f, -0.085f, 0.0f));
 		bunny.SetScale(5.f);
 		spdlog::info("Model loaded");
 	
-		Scythe::RendererAPI::Get()->SetClearColor(glm::vec4(0.2f, 0.2f, 0.3f, 1.0f));
+		RendererAPI::Get()->SetClearColor(glm::vec4(0.2f, 0.2f, 0.3f, 1.0f));
 	
 		float lastFrame = 0.0;
 		float bunnyYaw = 0.0f;
@@ -48,8 +53,10 @@ int main()
 			float currentFrame = window->GetTime();
 			float deltaTime = currentFrame - lastFrame;
 			lastFrame = currentFrame;
-
-			Scythe::RendererAPI::Get()->Clear();
+			
+			subsystemManager->Update(deltaTime);
+			
+			RendererAPI::Get()->Clear();
 		
 			bunnyYaw += 60.0f * deltaTime;
 			bunny.SetRotation(glm::vec3(0.0f, bunnyYaw, 0.0f));
@@ -72,6 +79,6 @@ int main()
 		spdlog::critical("Engine Initialization Failed: {}", e.what());
 		return -1;
 	}
-
+	
 	return 0;
 }
