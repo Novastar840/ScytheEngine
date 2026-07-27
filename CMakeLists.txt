@@ -23,6 +23,13 @@ file(GLOB_RECURSE ENGINE_SOURCES
 add_executable(EngineApp ${ENGINE_SOURCES})
 target_compile_definitions(EngineApp PRIVATE _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 
+# Disable RTTI consistently across all compilers
+if(MSVC)
+    target_compile_options(EngineApp PRIVATE /GR-)
+else()
+    target_compile_options(EngineApp PRIVATE -fno-rtti)
+endif()
+
 include(FetchContent)
 
 FetchContent_Declare(
