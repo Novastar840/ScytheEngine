@@ -79,3 +79,48 @@ add_custom_target(CopyAssets ALL
         COMMENT "Copying assets to build directory"
 )
 add_dependencies(EngineApp CopyAssets)
+
+# ==========================================
+# CATCH2 UNIT TESTING SETUP
+# ==========================================
+enable_testing()
+
+# Fetch Catch2 v3
+FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v3.5.2 
+)
+FetchContent_MakeAvailable(Catch2)
+
+set(ENGINE_TEST_SOURCES
+        src/Scythe/GameObject.cpp
+        src/Scythe/Components/TransformComponent.cpp
+)
+
+file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "tests/*.cpp")
+
+add_executable(ScytheTests ${TEST_SOURCES} ${ENGINE_TEST_SOURCES})
+
+target_include_directories(ScytheTests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/Scythe
+        vendor/stb/include
+)
+
+target_link_libraries(ScytheTests PRIVATE
+        Catch2::Catch2WithMain
+        glm::glm
+        spdlog::spdlog
+)
+
+target_compile_definitions(ScytheTests PRIVATE _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
+if(MSVC)
+    target_compile_options(ScytheTests PRIVATE /GR-)
+else()
+    target_compile_options(ScytheTests PRIVATE -fno-rtti)
+endif()
+
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+include(CTest)
+include(Catch)
+catch_discover_tests(ScytheTests)
