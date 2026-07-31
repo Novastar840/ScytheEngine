@@ -1,46 +1,100 @@
 ﻿#pragma once
+#include <memory>
 #include <string>
+#include <vector>
+#include <utility>
 
-#include "glm/fwd.hpp"
-#include "glm/glm.hpp"
-#include "glm/detail/type_quat.hpp"
-#include "glm/gtc/quaternion.hpp"
+#include "Core/Component.h"
 
 namespace Scythe
 {
     class GameObject
     {
     public:
-        GameObject(const std::string& name, glm::vec3 position = glm::vec3());
-        GameObject(const std::string& name, glm::vec3 position, glm::vec3 rotation);
-        GameObject(const std::string& name, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
+        using ID = uint64_t;
+        static constexpr ID INVALID_ID = 0xFFFFFFFFFFFFFFFFULL;
+
+        GameObject(const std::string& name = "");
         
+        GameObject(GameObject&& other) noexcept;
+        
+        GameObject(const GameObject& other);
+
         virtual ~GameObject() = default;
-        
-        glm::vec3 GetPosition() const {return m_Position;}
-        glm::vec3 GetRotation() const {return glm::degrees(glm::eulerAngles(m_Rotation));}
-        glm::vec3 GetScale() const {return m_Scale;}
-        glm::mat4 GetTransformMatrix() const {return m_TransformMatrix;}
-        
-        void SetPosition(glm::vec3 newPosition);
-        void SetRotation(glm::vec3 newRotation);
-        void SetScale(float newScale);
-        void SetScale(glm::vec3 newScale);
-        
-        glm::vec3 GetForwardVector() const;
-        glm::vec3 GetRightVector() const;
-        glm::vec3 GetUpVector() const;
-        
-        void LookAtRotation(glm::vec3 lookAtPosition);
-        
-        virtual void Tick(float deltaTime) {}
-    protected:
-        void UpdateTransformMatrix();
+
+        ID GetID() const { return m_ID; }
+        const std::string& GetName() const { return m_Name; }
+        void SetName(const std::string& name) { m_Name = name; }
+
+        template <typename T, typename... Args>
+            requires std::derived_from<T, ComponentImpl<T>>
+        T& AddComponent(Args&&... args)
+        {
+            static_assert(std::is_base_of_v<Component, T>,
+                          "AddComponent requires a type derived from Scythe::Component");
+
+            auto component = std::make_unique<T>(std::forward<Args>(args)...);
+            Component* rawPtr = component.get();
+
+            m_Components.push_back(std::move(component));
+            rawPtr->m_Owner = this;
+            rawPtr->OnAttach(this);
+
+            return static_cast<T&>(*rawPtr);
+        }
+
+        template <typename T>
+            requires std::derived_from<T, ComponentImpl<T>>
+        T* GetComponent() const
+        {
+            for (const auto& comp : m_Components)
+            {
+                if (comp->GetTypeID() == T::StaticTypeID())
+                {
+                    return static_cast<T*>(comp.get());
+                }
+            }
+            return nullptr;
+        }
+
+        template <typename T>
+            requires std::derived_from<T, ComponentImpl<T>>
+        bool HasComponent() const
+        {
+            return GetComponent<T>() != nullptr;
+        }
+
+        template <typename T>
+            requires std::derived_from<T, ComponentImpl<T>>
+        void RemoveComponent()
+        {
+            auto it= std::find_if(
+                m_Components.begin(), 
+                m_Components.end(),
+                [](const std::unique_ptr<Component>& comp)
+                {
+                    return comp->GetTypeID() == T::StaticTypeID();
+                });
+            if (it != m_Components.end())
+            {
+                (*it)->OnDetach();
+                m_Components.erase(it);
+            }
+        }
+
+        void Update(float deltaTime) const
+        {
+            for (auto& comp : m_Components)
+            {
+                comp->Update(deltaTime);
+            }
+        }
+
     private:
-        glm::vec3 m_Position;
-        glm::quat m_Rotation;
-        glm::vec3 m_Scale;
-        glm::mat4 m_TransformMatrix;
+        ID m_ID = INVALID_ID;
         std::string m_Name;
+        std::vector<std::unique_ptr<Component>> m_Components;
+
+        static inline uint64_t s_NextID = 0;
     };
 }

@@ -1,6 +1,5 @@
 ﻿#include "Window.h"
 #include "Platform/GLFWWindow.h"
-#include "../Camera.h"
 
 namespace Scythe
 {

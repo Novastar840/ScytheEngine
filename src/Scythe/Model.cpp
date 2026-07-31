@@ -7,10 +7,16 @@
 
 namespace Scythe
 {
-    Model::Model(const std::string& path, const std::string& name, glm::vec3 position)
-        : GameObject(name, position)
+    Model::Model(const std::string& path, const std::string& name)
+        : m_Directory(path), m_Name(name)
     {
         loadModel(path);
+    }
+
+    Model::Model(const std::string&& path, const std::string&& name)
+        : m_Directory(std::move(path)), m_Name(std::move(name))
+    {
+        loadModel(m_Directory);
     }
 
     void Model::Draw(const std::shared_ptr<Shader>& shader) const

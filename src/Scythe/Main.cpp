@@ -3,48 +3,70 @@
 
 #include "Model.h"
 #include "Core/Window.h"
-#include "Camera.h"
 #include "GameObject.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Components/CameraComponent.h"
+#include "Components/MeshRendererComponent.h"
+#include "Components/TransformComponent.h"
 #include "Core/RendererAPI.h"
 #include "Core/Shader.h"
 #include "Core/SubsystemManager.h"
+#include "Subsystems/RuntimeManager.h"
 
 using namespace Scythe;
+
+static GameObject& SetupCamera()
+{
+	GameObject* camera = new GameObject("Camera");
+		
+	auto& camTransformComponent = camera->AddComponent<TransformComponent>(glm::vec3(0.0f, 0.5f, 2.0f));
+	camTransformComponent.LookAtRotation(glm::vec3(0.0f, 0.4f, 0.0f));
+		
+	auto& camComp = camera->AddComponent<CameraComponent>();
+	camComp.SetPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
+	
+	return *camera;
+}
 
 int main()
 {
 	try 
 	{
 		std::unique_ptr<SubsystemManager> subsystemManager = std::make_unique<SubsystemManager>();
+		subsystemManager->Register<RuntimeManager>();
+		
+		subsystemManager->InitializeAll();
 		
 		RendererAPI::SetAPI(RendererAPI::API::OpenGL);
 	
 		auto window = Window::Create("EngineApp", 800, 600);
 		RendererAPI::Initialize();
-	
-		Camera camera("MainCamera", glm::vec3(0.0f, 0.5f, 2.0f));
-
-		camera.SetPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
-
-		camera.LookAtRotation(glm::vec3(0.0f, 0.4f, 0.0f));
-
-		window->SetMainCamera(&camera);
 
 		spdlog::info("Working dir: {} ", std::filesystem::current_path().string());
-
+		
+		GameObject& camera = SetupCamera();
+		CameraComponent* camComp = camera.GetComponent<CameraComponent>();
+		
 		auto shader = Shader::Create("assets/shaders/basic.vert", "assets/shaders/basic.frag");
 		shader->Bind();
 
-		Model bunny("assets/models/stanford-bunny.obj", "StanfordBunny", glm::vec3(0.0f, -0.085f, 0.0f));
-		bunny.SetScale(5.f);
+		GameObject bunny("StanfordBunny");
+        
+		auto& bunnyTransform = bunny.AddComponent<TransformComponent>(glm::vec3(0.0f, -0.085f, 0.0f));
+		bunnyTransform.SetScale(5.f);
+
+		Model bunnyModel("assets/models/stanford-bunny.obj", "StanfordBunny");
+        
+		bunny.AddComponent<MeshRendererComponent>(std::move(bunnyModel));
 		spdlog::info("Model loaded");
 	
 		RendererAPI::Get()->SetClearColor(glm::vec4(0.2f, 0.2f, 0.3f, 1.0f));
-	
+		
+		window->SetMainCamera(camera.GetComponent<CameraComponent>());
+		
 		float lastFrame = 0.0;
 		float bunnyYaw = 0.0f;
 		
@@ -59,20 +81,24 @@ int main()
 			RendererAPI::Get()->Clear();
 		
 			bunnyYaw += 60.0f * deltaTime;
-			bunny.SetRotation(glm::vec3(0.0f, bunnyYaw, 0.0f));
+			bunnyTransform.SetRotation(glm::vec3(0.0f, bunnyYaw, 0.0f));
+			
+			glm::mat4 viewMatrix = camComp->GetViewMatrix(*camera.GetComponent<TransformComponent>());
+			glm::mat4 projMatrix = camComp->GetProjectionMatrix();
 
-			camera.Tick(deltaTime);
-		
-			shader->SetMat4("uView", glm::value_ptr(window->GetMainCamera()->GetViewMatrix()));
-			shader->SetMat4("uProjection", glm::value_ptr(window->GetMainCamera()->GetProjectionMatrix()));
+			shader->SetMat4("uView", glm::value_ptr(viewMatrix));
+			shader->SetMat4("uProjection", glm::value_ptr(projMatrix));
 
-			shader->SetMat4("uModel", glm::value_ptr(bunny.GetTransformMatrix()));
-
-			bunny.Draw(shader);
+			auto* renderer = bunny.GetComponent<MeshRendererComponent>();
+			if (renderer) {
+				renderer->Draw(shader);
+			}
 
 			window->SwapBuffers();
 			window->PollEvents();
 		}
+		
+		subsystemManager->ShutdownAll();
 	}
 	catch (const std::exception& e)
 	{

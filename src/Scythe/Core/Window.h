@@ -2,6 +2,8 @@
 #include <memory>
 #include <string>
 
+#include "Components/CameraComponent.h"
+
 struct GLFWWindow;
 
 namespace Scythe
@@ -22,8 +24,8 @@ namespace Scythe
         unsigned int GetHeight() const { return m_Height; }
         const std::string& GetTitle() const { return m_Title; }
         
-        void SetMainCamera(Camera* camera) { m_MainCamera = camera; }
-        Camera* GetMainCamera() const { return m_MainCamera; }
+        void SetMainCamera(CameraComponent* camera) { m_MainCamera = camera; }
+        CameraComponent* GetMainCamera() const { return m_MainCamera; }
         
         static std::unique_ptr<Window> Create(
             const std::string& title = "Scythe Engine", 
@@ -32,7 +34,7 @@ namespace Scythe
     protected:
         unsigned int m_Width, m_Height;
         std::string m_Title;
-        Camera* m_MainCamera = nullptr;
+        CameraComponent* m_MainCamera = nullptr;
         
         Window(const std::string& title, unsigned int width, unsigned int height)
             : m_Width(width), m_Height(height), m_Title(title) {}

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <memory>
 
 namespace Scythe
 {
@@ -16,6 +17,7 @@ namespace Scythe
         virtual void OnAttach(GameObject* owner) {}
         virtual void OnDetach() {}
         virtual void Update(float deltaTime) {}
+        virtual std::unique_ptr<Component> Clone() const = 0;
         
         GameObject* GetOwner() const { return m_Owner; }
     protected:
@@ -34,10 +36,17 @@ namespace Scythe
             static uint32_t id = s_NextTypeID++;
             return id;
         }
-
+        
         uint32_t GetTypeID() const override
         {
             return StaticTypeID();
+        }
+        
+        std::unique_ptr<Component> Clone() const override
+        {
+            static_assert(std::is_copy_constructible_v<T>,
+                          "Components must be copy-constructible to support Scene deep-copy");
+            return std::make_unique<T>(static_cast<const T&>(*this));
         }
     };
 }
