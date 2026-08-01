@@ -14,6 +14,10 @@ namespace Scythe
         m_Name(std::move(other.m_Name)),
         m_Components(std::move(other.m_Components))
     {
+        for (auto& comp : m_Components) 
+        {
+            comp->m_Owner = this;
+        }
     }
     
     GameObject::GameObject(const GameObject& other)
