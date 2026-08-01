@@ -19,6 +19,16 @@ namespace Scythe
         GameObject(GameObject&& other) noexcept;
         
         GameObject(const GameObject& other);
+        
+        template <typename... Ts>
+            requires (sizeof...(Ts) > 0 && (std::derived_from<Ts, Component> && ...))
+        GameObject(const std::string& name, std::unique_ptr<Ts>... components)
+            : m_ID(++s_NextID), m_Name(name)
+        {
+            m_Components.reserve(sizeof...(Ts));
+            
+            (AttachRaw(std::move(components)), ...); 
+        }
 
         virtual ~GameObject() = default;
 
@@ -27,7 +37,7 @@ namespace Scythe
         void SetName(const std::string& name) { m_Name = name; }
 
         template <typename T, typename... Args>
-            requires std::derived_from<T, ComponentImpl<T>>
+            requires std::derived_from<T, ComponentImpl<T>> && std::constructible_from<T, Args...>
         T& AddComponent(Args&&... args)
         {
             static_assert(std::is_base_of_v<Component, T>,
@@ -96,5 +106,7 @@ namespace Scythe
         std::vector<std::unique_ptr<Component>> m_Components;
 
         static inline uint64_t s_NextID = 0;
+        
+        void AttachRaw(std::unique_ptr<Component> component);
     };
 }

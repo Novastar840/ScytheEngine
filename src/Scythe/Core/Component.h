@@ -49,4 +49,11 @@ namespace Scythe
             return std::make_unique<T>(static_cast<const T&>(*this));
         }
     };
+    
+    template <typename T, typename... Args>
+        requires std::derived_from<T, ComponentImpl<T>> && std::constructible_from<T, Args...>
+    std::unique_ptr<T> MakeComponent(Args&&... args) 
+    {
+        return std::make_unique<T>(std::forward<Args>(args)...);
+    }
 }

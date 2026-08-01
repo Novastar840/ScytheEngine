@@ -33,4 +33,12 @@ namespace Scythe
             rawPtr->OnAttach(this);
         }
     }
+
+    void GameObject::AttachRaw(std::unique_ptr<Component> component)
+    {
+        Component* rawPtr = component.get();
+        m_Components.push_back(std::move(component));
+        rawPtr->m_Owner = this;
+        rawPtr->OnAttach(this);
+    }
 }

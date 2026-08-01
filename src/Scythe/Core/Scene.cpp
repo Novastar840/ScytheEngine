@@ -20,15 +20,17 @@ namespace Scythe
         const glm::vec3& rotation, 
         const glm::vec3& scale)
     {
-        m_GameObjects.emplace_back(std::make_unique<GameObject>(name));
-        m_GameObjects.back()->AddComponent<TransformComponent>(position, rotation, scale);
+        m_GameObjects.emplace_back(std::make_unique<GameObject>(
+            name, 
+            MakeComponent<TransformComponent>(position, rotation, scale)));
         return m_GameObjects.back().get();
     }
 
     GameObject* Scene::CreateGameObject(const std::string& name, const glm::vec3& position)
     {
-        m_GameObjects.emplace_back(std::make_unique<GameObject>(name));
-        m_GameObjects.back()->AddComponent<TransformComponent>(position);
+        m_GameObjects.emplace_back(std::make_unique<GameObject>(
+            name, 
+            MakeComponent<TransformComponent>(position)));
         return m_GameObjects.back().get();
     }
 
