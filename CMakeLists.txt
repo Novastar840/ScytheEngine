@@ -20,7 +20,14 @@ file(GLOB_RECURSE ENGINE_SOURCES
         "src/*.h"
 )
 
+#list(FILTER ENGINE_SOURCES EXCLUDE REGEX ".*ScytheEnginePCH\\.h$")
+
 add_executable(EngineApp ${ENGINE_SOURCES})
+
+set(ENGINE_PCH "src/Scythe/ScytheEnginePCH.h")
+target_sources(EngineApp PRIVATE ${ENGINE_PCH})
+target_precompile_headers(EngineApp PRIVATE ${ENGINE_PCH})
+
 target_compile_definitions(EngineApp PRIVATE _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
 
 # Disable RTTI consistently across all compilers
@@ -67,6 +74,7 @@ target_include_directories(glad PUBLIC vendor/glad/include)
 target_include_directories(EngineApp PUBLIC 
         vendor/stb/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/Scythe
+        ${glm_SOURCE_DIR}
 )
 
 target_link_libraries(EngineApp PRIVATE glfw glad spdlog::spdlog glm::glm assimp)
@@ -102,6 +110,7 @@ set(ENGINE_TEST_SOURCES
 file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "tests/*.cpp")
 
 add_executable(ScytheTests ${TEST_SOURCES} ${ENGINE_TEST_SOURCES})
+target_precompile_headers(ScytheTests PRIVATE src/Scythe/ScytheEnginePCH.h)
 
 target_include_directories(ScytheTests PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/Scythe
@@ -112,6 +121,8 @@ target_link_libraries(ScytheTests PRIVATE
         Catch2::Catch2WithMain
         glm::glm
         spdlog::spdlog
+        glad
+        glfw
 )
 
 target_compile_definitions(ScytheTests PRIVATE _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
