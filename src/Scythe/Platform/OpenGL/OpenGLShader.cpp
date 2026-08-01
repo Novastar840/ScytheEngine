@@ -1,5 +1,4 @@
 ﻿#include "OpenGLShader.h"
-#include <glad/gl.h>
 #include <spdlog/spdlog.h>
 #include <fstream>
 #include <sstream>

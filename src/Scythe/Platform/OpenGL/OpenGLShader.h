@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <unordered_map>
-#include <glad/gl.h>
 
 #include "Core/Shader.h"
 

@@ -1,5 +1,4 @@
 ﻿#include "OpenGLBuffer.h"
-#include <glad/gl.h>
 
 namespace Scythe
 {

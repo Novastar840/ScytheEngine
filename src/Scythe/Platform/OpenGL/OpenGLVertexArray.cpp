@@ -1,5 +1,4 @@
 ﻿#include "OpenGLVertexArray.h"
-#include <glad/gl.h>
 #include <cstdint>
 
 namespace Scythe
