@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include <unordered_map>
-
 #include "Core/Shader.h"
 
 namespace Scythe
@@ -17,8 +15,8 @@ namespace Scythe
 
         void SetInt(const std::string& name, int value) const override;
         void SetFloat(const std::string& name, float value) const override;
-        void SetVec3(const std::string& name, const glm::vec3& value) const override;
-        void SetVec4(const std::string& name, const glm::vec4& value) const override;
+        void SetVec3(const std::string& name, const Vec3& value) const override;
+        void SetVec4(const std::string& name, const Vec4& value) const override;
         void SetMat4(const std::string& name, const float* value) const override;
     private:
         uint32_t m_RendererID;

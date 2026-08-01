@@ -5,7 +5,6 @@
 #include "Core/Window.h"
 #include "GameObject.h"
 
-#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Components/CameraComponent.h"
@@ -22,8 +21,8 @@ static GameObject& SetupCamera()
 {
 	GameObject* camera = new GameObject("Camera");
 		
-	auto& camTransformComponent = camera->AddComponent<TransformComponent>(glm::vec3(0.0f, 0.5f, 2.0f));
-	camTransformComponent.LookAtRotation(glm::vec3(0.0f, 0.4f, 0.0f));
+	auto& camTransformComponent = camera->AddComponent<TransformComponent>(Vec3(0.0f, 0.5f, 2.0f));
+	camTransformComponent.LookAtRotation(Vec3(0.0f, 0.4f, 0.0f));
 		
 	auto& camComp = camera->AddComponent<CameraComponent>();
 	camComp.SetPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
@@ -55,7 +54,7 @@ int main()
 
 		GameObject bunny("StanfordBunny");
         
-		auto& bunnyTransform = bunny.AddComponent<TransformComponent>(glm::vec3(0.0f, -0.085f, 0.0f));
+		auto& bunnyTransform = bunny.AddComponent<TransformComponent>(Vec3(0.0f, -0.085f, 0.0f));
 		bunnyTransform.SetScale(5.f);
 
 		Model bunnyModel("assets/models/stanford-bunny.obj", "StanfordBunny");
@@ -63,7 +62,7 @@ int main()
 		bunny.AddComponent<MeshRendererComponent>(std::move(bunnyModel));
 		spdlog::info("Model loaded");
 	
-		RendererAPI::Get()->SetClearColor(glm::vec4(0.2f, 0.2f, 0.3f, 1.0f));
+		RendererAPI::Get()->SetClearColor(Vec4(0.2f, 0.2f, 0.3f, 1.0f));
 		
 		window->SetMainCamera(camera.GetComponent<CameraComponent>());
 		
@@ -81,10 +80,10 @@ int main()
 			RendererAPI::Get()->Clear();
 		
 			bunnyYaw += 60.0f * deltaTime;
-			bunnyTransform.SetRotation(glm::vec3(0.0f, bunnyYaw, 0.0f));
+			bunnyTransform.SetRotation(Vec3(0.0f, bunnyYaw, 0.0f));
 			
-			glm::mat4 viewMatrix = camComp->GetViewMatrix(*camera.GetComponent<TransformComponent>());
-			glm::mat4 projMatrix = camComp->GetProjectionMatrix();
+			Mat4 viewMatrix = camComp->GetViewMatrix(*camera.GetComponent<TransformComponent>());
+			Mat4 projMatrix = camComp->GetProjectionMatrix();
 
 			shader->SetMat4("uView", glm::value_ptr(viewMatrix));
 			shader->SetMat4("uProjection", glm::value_ptr(projMatrix));

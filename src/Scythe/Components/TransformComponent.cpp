@@ -4,12 +4,12 @@
 
 namespace Scythe
 {
-    TransformComponent::TransformComponent(glm::vec3 position, glm::quat rotation, glm::vec3 scale)
+    TransformComponent::TransformComponent(Vec3 position, Quat rotation, Vec3 scale)
         : m_Position(position), m_Rotation(rotation), m_Scale(scale)
     {
     }
 
-    void TransformComponent::SetPosition(glm::vec3 newPosition)
+    void TransformComponent::SetPosition(Vec3 newPosition)
     {
         if (m_Position != newPosition)
         {
@@ -18,12 +18,12 @@ namespace Scythe
         }
     }
 
-    void TransformComponent::SetRotation(glm::vec3 newRotation)
+    void TransformComponent::SetRotation(Vec3 newRotation)
     {
-        SetRotation(glm::quat(glm::radians(newRotation)));
+        SetRotation(Quat(glm::radians(newRotation)));
     }
 
-    void TransformComponent::SetRotation(glm::quat newRotation)
+    void TransformComponent::SetRotation(Quat newRotation)
     {
         if (m_Rotation != newRotation)
         {
@@ -32,17 +32,17 @@ namespace Scythe
         }
     }
 
-    glm::vec3 TransformComponent::GetEulerAngles() const
+    Vec3 TransformComponent::GetEulerAngles() const
     {
         return glm::degrees(glm::eulerAngles(m_Rotation));
     }
 
     void TransformComponent::SetScale(float newScale)
     {
-        SetScale(glm::vec3(newScale));
+        SetScale(Vec3(newScale));
     }
 
-    void TransformComponent::SetScale(glm::vec3 newScale)
+    void TransformComponent::SetScale(Vec3 newScale)
     {
         if (m_Scale != newScale)
         {
@@ -51,43 +51,43 @@ namespace Scythe
         }
     }
 
-    glm::mat4 TransformComponent::GetTransformMatrix() const
+    Mat4 TransformComponent::GetTransformMatrix() const
     {
         if (m_MatrixDirty) UpdateTransformMatrix();
         return m_TransformMatrix;
     }
 
-    glm::vec3 TransformComponent::GetForwardVector() const
+    Vec3 TransformComponent::GetForwardVector() const
     {
-        return m_Rotation * glm::vec3(0.0f, 0.0f, -1.0f);
+        return m_Rotation * Vec3(0.0f, 0.0f, -1.0f);
     }
 
-    glm::vec3 TransformComponent::GetRightVector() const
+    Vec3 TransformComponent::GetRightVector() const
     {
-        return m_Rotation * glm::vec3(1.0f, 0.0f, 0.0f);
+        return m_Rotation * Vec3(1.0f, 0.0f, 0.0f);
     }
 
-    glm::vec3 TransformComponent::GetUpVector() const
+    Vec3 TransformComponent::GetUpVector() const
     {
-        return m_Rotation * glm::vec3(0.0f, 1.0f, 0.0f);
+        return m_Rotation * Vec3(0.0f, 1.0f, 0.0f);
     }
 
-    void TransformComponent::LookAtRotation(glm::vec3 lookAtPosition)
+    void TransformComponent::LookAtRotation(Vec3 lookAtPosition)
     {
-        glm::vec3 direction = lookAtPosition - m_Position;
+        Vec3 direction = lookAtPosition - m_Position;
         if (glm::length(direction) < 0.0001f)
         {
             spdlog::error("TransformComponent: look at rotation failed: lookAtPosition too close");
             return;
         }
         direction = glm::normalize(direction);
-        auto worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        auto worldUp = Vec3(0.0f, 1.0f, 0.0f);
         SetRotation(glm::quatLookAt(direction, worldUp));
     }
 
     void TransformComponent::UpdateTransformMatrix() const
     {
-        m_TransformMatrix = glm::mat4(1.0f);
+        m_TransformMatrix = Mat4(1.0f);
         m_TransformMatrix = glm::translate(m_TransformMatrix, m_Position);
         m_TransformMatrix *= glm::mat4_cast(m_Rotation);
         m_TransformMatrix = glm::scale(m_TransformMatrix, m_Scale);

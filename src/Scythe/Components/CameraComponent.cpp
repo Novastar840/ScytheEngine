@@ -49,10 +49,10 @@ namespace Scythe
         RecalculateProjection();
     }
 
-    glm::mat4 CameraComponent::GetViewMatrix(const TransformComponent& transform) const
+    Mat4 CameraComponent::GetViewMatrix(const TransformComponent& transform) const
     {
-        glm::vec3 position = transform.GetPosition();
-        glm::vec3 target = position + transform.GetForwardVector();
+        Vec3 position = transform.GetPosition();
+        Vec3 target = position + transform.GetForwardVector();
         return glm::lookAt(position, target, transform.GetUpVector());
     }
 

@@ -1,8 +1,6 @@
 #pragma once
-#include <valarray>
 
 #include "Core/Component.h"
-#include <glm/glm.hpp>
 
 namespace Scythe
 {
@@ -39,14 +37,14 @@ namespace Scythe
         void SetOrthographic(const CameraOrthographicProperties& properties);
         void SetAspectRatio(float aspectRatio);
 
-        glm::mat4 GetViewMatrix(const TransformComponent& transform) const;
-        glm::mat4 GetProjectionMatrix() const { return m_ProjectionMatrix; }
+        Mat4 GetViewMatrix(const TransformComponent& transform) const;
+        Mat4 GetProjectionMatrix() const { return m_ProjectionMatrix; }
 
     private:
         void RecalculateProjection();
 
         ProjectionType m_ProjectionType = ProjectionType::Perspective;
-        glm::mat4 m_ProjectionMatrix = glm::mat4(1.0f);
+        Mat4 m_ProjectionMatrix = Mat4(1.0f);
 
         float m_Fov = 45.0f;
         float m_AspectRatio = 16.0f / 9.0f;

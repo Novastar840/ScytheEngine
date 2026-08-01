@@ -1,6 +1,4 @@
 ﻿#pragma once
-#include <string>
-#include <vector>
 #include "Mesh.h"
 
 #include <assimp/Importer.hpp>

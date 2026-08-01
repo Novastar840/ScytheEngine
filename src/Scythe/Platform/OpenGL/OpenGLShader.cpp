@@ -38,12 +38,12 @@ namespace Scythe
         glUniform1f(GetUniformLocation(name), value);
     }
 
-    void OpenGLShader::SetVec3(const std::string& name, const glm::vec3& value) const
+    void OpenGLShader::SetVec3(const std::string& name, const Vec3& value) const
     {
         glUniform3fv(GetUniformLocation(name), 1, &value[0]);
     }
 
-    void OpenGLShader::SetVec4(const std::string& name, const glm::vec4& value) const
+    void OpenGLShader::SetVec4(const std::string& name, const Vec4& value) const
     {
         glUniform4fv(GetUniformLocation(name), 1, &value[0]);
     }

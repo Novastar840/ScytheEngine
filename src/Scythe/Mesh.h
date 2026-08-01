@@ -1,25 +1,17 @@
 ﻿#pragma once
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
-
 
 namespace Scythe
 {
     class Shader;
     class VertexArray;
-    // class OpenGLShader;
     class Texture2D;
     
     
     struct Vertex
     {
-        glm::vec3 Position;
-        glm::vec3 Normal;
-        glm::vec2 TexCoords;
+        Vec3 Position;
+        Vec3 Normal;
+        Vec2 TexCoords;
     };
     
     struct Texture
@@ -39,7 +31,6 @@ namespace Scythe
         std::shared_ptr<VertexArray> m_VertexArray;
         
         Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
-        // ~Mesh();
         
         Mesh(const Mesh&) = delete;
         Mesh& operator=(const Mesh&) = delete;

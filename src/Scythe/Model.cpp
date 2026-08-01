@@ -70,7 +70,7 @@ namespace Scythe
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
             Vertex vertex;
-            glm::vec3 vector;
+            Vec3 vector;
 
             vector.x = mesh->mVertices[i].x;
             vector.y = mesh->mVertices[i].y;
@@ -87,14 +87,14 @@ namespace Scythe
 
             if (mesh->mTextureCoords[0])
             {
-                glm::vec2 vec;
+                Vec2 vec;
                 vec.x = mesh->mTextureCoords[0][i].x;
                 vec.y = mesh->mTextureCoords[0][i].y;
                 vertex.TexCoords = vec;
             }
             else
             {
-                vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+                vertex.TexCoords = Vec2(0.0f, 0.0f);
             }
             vertices.push_back(vertex);
         }

@@ -1,6 +1,4 @@
 #pragma once
-#include <memory>
-#include <vector>
 
 #include "Core/Subsystem.h"
 #include "Core/Scene.h"

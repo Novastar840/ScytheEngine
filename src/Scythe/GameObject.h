@@ -1,7 +1,5 @@
 ﻿#pragma once
-#include <memory>
-#include <string>
-#include <vector>
+
 #include <utility>
 
 #include "Core/Component.h"

@@ -16,9 +16,9 @@ namespace Scythe
 
     GameObject* Scene::CreateGameObject(
         const std::string& name, 
-        const glm::vec3& position, 
-        const glm::vec3& rotation, 
-        const glm::vec3& scale)
+        const Vec3& position, 
+        const Vec3& rotation, 
+        const Vec3& scale)
     {
         m_GameObjects.emplace_back(std::make_unique<GameObject>(
             name, 
@@ -26,7 +26,7 @@ namespace Scythe
         return m_GameObjects.back().get();
     }
 
-    GameObject* Scene::CreateGameObject(const std::string& name, const glm::vec3& position)
+    GameObject* Scene::CreateGameObject(const std::string& name, const Vec3& position)
     {
         m_GameObjects.emplace_back(std::make_unique<GameObject>(
             name, 

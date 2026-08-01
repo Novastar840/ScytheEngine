@@ -12,12 +12,12 @@ namespace Scythe
         
         GameObject* CreateGameObject(
             const std::string& name, 
-            const glm::vec3& position, 
-            const glm::vec3& rotation, 
-            const glm::vec3& scale = glm::vec3(1.0f)
+            const Vec3& position, 
+            const Vec3& rotation, 
+            const Vec3& scale = Vec3(1.0f)
             );
         
-        GameObject* CreateGameObject(const std::string& name = "", const glm::vec3& position = glm::vec3(0.0f));
+        GameObject* CreateGameObject(const std::string& name = "", const Vec3& position = Vec3(0.0f));
         
         template <typename... Ts>
         GameObject* CreateGameObject(const std::string& name, std::unique_ptr<Ts>... components)
