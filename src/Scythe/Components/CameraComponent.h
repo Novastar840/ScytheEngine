@@ -1,4 +1,6 @@
 #pragma once
+#include <valarray>
+
 #include "Core/Component.h"
 #include <glm/glm.hpp>
 
@@ -7,14 +9,34 @@ namespace Scythe
     class TransformComponent;
 
     enum class ProjectionType { Perspective, Orthographic };
-
+    
+    struct CameraPerspectiveProperties
+    {
+        float Fov = 45.0f;
+        float AspectRatio = 16.0f / 9.0f;
+        float NearPlane = 0.1f;
+        float FarPlane = 1000.0f;
+    };
+    
+    struct CameraOrthographicProperties
+    {
+        float Bottom = -1.0f;
+        float Top = 1.0f;
+        float Left = 16.f / 9;
+        float Right = 16.f / 9;
+        float NearPlane = 0.1f;
+        float FarPlane = 1000.0f;
+    };
+    
     class CameraComponent : public ComponentImpl<CameraComponent>
     {
     public:
         CameraComponent() = default;
 
         void SetPerspective(float fovDegrees, float aspectRatio, float nearPlane, float farPlane);
+        void SetPerspective(const CameraPerspectiveProperties& properties);
         void SetOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane);
+        void SetOrthographic(const CameraOrthographicProperties& properties);
         void SetAspectRatio(float aspectRatio);
 
         glm::mat4 GetViewMatrix(const TransformComponent& transform) const;

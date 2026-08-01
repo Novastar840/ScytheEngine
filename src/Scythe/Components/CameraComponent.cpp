@@ -14,11 +14,33 @@ namespace Scythe
         RecalculateProjection();
     }
 
+    void CameraComponent::SetPerspective(const CameraPerspectiveProperties& properties)
+    {
+        m_ProjectionType = ProjectionType::Perspective;
+        m_Fov = properties.Fov;
+        m_AspectRatio = properties.AspectRatio;
+        m_NearPlane = properties.NearPlane;
+        m_FarPlane = properties.FarPlane;
+        RecalculateProjection();
+    }
+
     void CameraComponent::SetOrthographic(float left, float right, float bottom, float top, float nearPlane,
                                           float farPlane)
     {
         m_ProjectionType = ProjectionType::Orthographic;
         m_ProjectionMatrix = glm::ortho(left, right, bottom, top, nearPlane, farPlane);
+    }
+
+    void CameraComponent::SetOrthographic(const CameraOrthographicProperties& properties)
+    {
+        m_ProjectionType = ProjectionType::Orthographic;
+        m_ProjectionMatrix = glm::ortho(
+            properties.Left,
+            properties.Right,
+            properties.Bottom,
+            properties.Top,
+            properties.NearPlane,
+            properties.FarPlane);
     }
 
     void CameraComponent::SetAspectRatio(float aspectRatio)
