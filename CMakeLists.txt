@@ -96,6 +96,7 @@ FetchContent_MakeAvailable(Catch2)
 set(ENGINE_TEST_SOURCES
         src/Scythe/GameObject.cpp
         src/Scythe/Components/TransformComponent.cpp
+        src/Scythe/Core/Scene.cpp
 )
 
 file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "tests/*.cpp")

@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "GameObject.h"
 #include "Components/TransformComponent.h"
+//#include "Core/Component.h"
 
 using namespace Scythe;
 
@@ -12,8 +13,9 @@ TEST_CASE("GameObject Construction and Properties", "[GameObject]")
     REQUIRE(gameObject.GetName() == name);
     REQUIRE(gameObject.GetID() != GameObject::INVALID_ID);
     
-    GameObject secondGameObject = GameObject("second");
+    GameObject secondGameObject = GameObject("second", MakeComponent<TransformComponent>());
     REQUIRE(secondGameObject.GetID() != gameObject.GetID());
+    REQUIRE(secondGameObject.GetComponent<TransformComponent>() != nullptr);
 }
 
 TEST_CASE("GameObject Components", "[GameObject]")
