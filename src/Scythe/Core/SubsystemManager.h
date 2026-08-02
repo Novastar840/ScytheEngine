@@ -41,12 +41,12 @@ namespace Scythe
         
         void InitializeAll() const
         {
-            for (auto* sub : m_InitOrder) 
+            for (auto* sub : m_InitOrder)
             {
-                std::cout << "[Scythe] Initializing: " << sub->GetName() << "\n";
-                if (!sub->Initialize()) 
+                SPDLOG_INFO("Initializing: {}", sub->GetName());
+                if (!sub->Initialize())
                 {
-                    std::cerr << "[Scythe] FATAL: Failed to initialize " << sub->GetName() << "\n";
+                    SPDLOG_ERROR("FATAL: Failed to initialize {}", sub->GetName());
                 }
             }
         }

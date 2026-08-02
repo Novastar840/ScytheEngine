@@ -1,5 +1,4 @@
 ﻿#include "GLFWWindow.h"
-#define GLFW_INCLUDE_NONE
 #include <spdlog/spdlog.h>
 #include "Core/GraphicsContext.h"
 #include "Core/RendererAPI.h"

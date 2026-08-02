@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <functional>
 #include <algorithm>
+#include <array>
 
 // ==========================================
 // 2. Third-Party Libraries

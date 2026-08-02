@@ -55,7 +55,7 @@ namespace Scythe
             glEnableVertexAttribArray(index);
             glVertexAttribPointer(
                 index,
-                element.GetComponentCount(),
+                GetShaderDataTypeComponentCount(element.Type),
                 ShaderDataTypeToOpenGLBaseType(element.Type),
                 element.Normalized ? GL_TRUE : GL_FALSE,
                 layout.GetStride(),
