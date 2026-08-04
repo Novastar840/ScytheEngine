@@ -101,13 +101,11 @@ namespace Scythe
         template <typename T>
         using HasCircularDependency = DependencyCycleCheck<T, TypeList<>>;
         
-        // Are all Needles contained in Haystack?
-        template <typename Needles, typename Haystack> struct TypeListSubset;
-        template <typename... Needles, typename Haystack>
-        struct TypeListSubset<TypeList<Needles...>, Haystack>
-            : std::bool_constant<(TypeListContains<Needles, Haystack>::value && ...)> {};
+        template <typename RequiredList, typename AvailableList> struct TypeListSubset;
+        template <typename... RequiredTypes, typename AvailableList>
+        struct TypeListSubset<TypeList<RequiredTypes...>, AvailableList>
+            : std::bool_constant<(TypeListContains<RequiredTypes, AvailableList>::value && ...)> {};
 
-        // Is the pack closed under dependencies? (every T's Requires ⊆ pack)
         template <typename Pack> struct PackDependenciesSatisfied;
         template <typename... Ts>
         struct PackDependenciesSatisfied<TypeList<Ts...>>
