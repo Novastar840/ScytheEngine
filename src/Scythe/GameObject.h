@@ -23,8 +23,10 @@ namespace Scythe
         GameObject(const std::string& name, std::unique_ptr<Ts>... components)
             : m_ID(++s_NextID), m_Name(name)
         {
-            m_Components.reserve(sizeof...(Ts));
+            static_assert(Component::PackDependenciesSatisfied<Component::TypeList<Ts...>>::value,
+                "GameObject constructor pack is missing required components");
             
+            m_Components.reserve(sizeof...(Ts));
             (AttachRaw(std::move(components)), ...); 
         }
 
@@ -38,8 +40,12 @@ namespace Scythe
             requires std::derived_from<T, ComponentImpl<T>> && std::constructible_from<T, Args...>
         T& AddComponent(Args&&... args)
         {
-            static_assert(std::is_base_of_v<Component, T>,
-                          "AddComponent requires a type derived from Scythe::Component");
+            static_assert(!Component::TypeListContains<T, Component::ComponentRequiresList<T>>::value,
+                "A component cannot list itself as a dependency");
+            static_assert(Component::AllDeriveFromComponent<Component::ComponentRequiresList<T>>::value,
+                "All required types must derive from Component");
+            static_assert(!Component::HasCircularDependency<T>::value,
+                "Circular dependency detected in component dependency graph");
 
             auto component = std::make_unique<T>(std::forward<Args>(args)...);
             Component* rawPtr = component.get();

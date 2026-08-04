@@ -1,11 +1,10 @@
 #pragma once
 
 #include "Core/Component.h"
+#include "Components/TransformComponent.h"
 
 namespace Scythe
 {
-    class TransformComponent;
-
     enum class ProjectionType { Perspective, Orthographic };
     
     struct CameraPerspectiveProperties
@@ -30,7 +29,8 @@ namespace Scythe
     {
     public:
         CameraComponent() = default;
-
+        DECLARE_COMPONENT_DEPENDENCY(TransformComponent);
+        
         void SetPerspective(float fovDegrees, float aspectRatio, float nearPlane, float farPlane);
         void SetPerspective(const CameraPerspectiveProperties& properties);
         void SetOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane);
