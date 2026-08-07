@@ -1,5 +1,4 @@
 ﻿#include <filesystem>
-#include <spdlog/spdlog.h>
 
 #include "Model.h"
 #include "Core/Window.h"
@@ -35,8 +34,7 @@ int main()
 	try 
 	{
 		std::unique_ptr<SubsystemManager> subsystemManager = std::make_unique<SubsystemManager>();
-		subsystemManager->Register<RuntimeManager>();
-		
+		subsystemManager->RegisterAllFromRegistry();
 		subsystemManager->InitializeAll();
 		
 		RendererAPI::SetAPI(RendererAPI::API::OpenGL);

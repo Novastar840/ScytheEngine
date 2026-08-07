@@ -7,6 +7,7 @@ namespace Scythe
 {
     class RuntimeManager : public Subsystem
     {
+        SCYTHE_SUBSYSTEM(RuntimeManager)
     public:
         bool Initialize() override;
         

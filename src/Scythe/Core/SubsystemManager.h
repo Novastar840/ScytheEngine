@@ -7,12 +7,42 @@ namespace Scythe
     class SubsystemManager 
     {
     public:
+        // Automatically instantiate every subsystem registered via
+        // SCYTHE_SUBSYSTEM(...)
+        void RegisterAllFromRegistry()
+        {
+            for (const auto& entry : GetSubsystemRegistry())
+            {
+                // Already manually registered?
+                if (m_Subsystems.contains(entry.typeID))
+                {
+                    continue;
+                }
+
+                if (!entry.factory)
+                {
+                    continue;
+                }
+
+                std::unique_ptr<Subsystem> subsystem = entry.factory();
+
+                if (!subsystem)
+                {
+                    continue;
+                }
+
+                Subsystem* ptr = subsystem.get();
+
+                m_Subsystems.emplace(entry.typeID, std::move(subsystem));
+                m_InitOrder.push_back(ptr);
+            }
+        }
+        
         template<typename T, typename... Args>
         T* Register(Args&&... args) 
         {
             uintptr_t typeID = GetTypeID<T>();
             
-            // Prevent duplicate registrations
             if (m_Subsystems.contains(typeID)) 
             {
                 return static_cast<T*>(m_Subsystems[typeID].get());
