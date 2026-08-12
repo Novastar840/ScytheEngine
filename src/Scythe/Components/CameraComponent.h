@@ -27,9 +27,11 @@ namespace Scythe
     
     class CameraComponent : public ComponentImpl<CameraComponent>
     {
+        SCYTHE_COMPONENT(CameraComponent)
+        DECLARE_COMPONENT_DEPENDENCY(TransformComponent);
+        
     public:
         CameraComponent() = default;
-        DECLARE_COMPONENT_DEPENDENCY(TransformComponent);
         
         void SetPerspective(float fovDegrees, float aspectRatio, float nearPlane, float farPlane);
         void SetPerspective(const CameraPerspectiveProperties& properties);

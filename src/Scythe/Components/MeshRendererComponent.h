@@ -9,6 +9,7 @@ namespace Scythe
 
     class MeshRendererComponent : public ComponentImpl<MeshRendererComponent>
     {
+     SCYTHE_COMPONENT(MeshRendererComponent)   
     public:
         MeshRendererComponent() = default;
 

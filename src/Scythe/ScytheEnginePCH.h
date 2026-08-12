@@ -31,7 +31,12 @@
 // #include <assimp/postprocess.h>
 
 // ==========================================
-// 3. Engine Core Type Aliases
+// 3. Engine Files
+// ==========================================
+#include "Core/Reflection.h"
+
+// ==========================================
+// 4. Engine Core Type Aliases
 // ==========================================
 namespace Scythe {
     // Math Types

@@ -11,20 +11,20 @@ namespace Scythe
         // SCYTHE_SUBSYSTEM(...)
         void RegisterAllFromRegistry()
         {
-            for (const auto& entry : GetSubsystemRegistry())
+            for (const auto& entry : Reflect::GetRegistry<Subsystem>())
             {
                 // Already manually registered?
-                if (m_Subsystems.contains(entry.typeID))
+                if (m_Subsystems.contains(entry.TypeID))
                 {
                     continue;
                 }
 
-                if (!entry.factory)
+                if (!entry.Factory)
                 {
                     continue;
                 }
 
-                std::unique_ptr<Subsystem> subsystem = entry.factory();
+                std::unique_ptr<Subsystem> subsystem = entry.Factory();
 
                 if (!subsystem)
                 {
@@ -33,7 +33,7 @@ namespace Scythe
 
                 Subsystem* ptr = subsystem.get();
 
-                m_Subsystems.emplace(entry.typeID, std::move(subsystem));
+                m_Subsystems.emplace(entry.TypeID, std::move(subsystem));
                 m_InitOrder.push_back(ptr);
             }
         }

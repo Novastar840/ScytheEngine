@@ -8,6 +8,7 @@ namespace Scythe
 {
     class TransformComponent : public ComponentImpl<TransformComponent>
     {
+        SCYTHE_COMPONENT(TransformComponent)
     public:
         TransformComponent(
             Vec3 position = Vec3(0.0f),
