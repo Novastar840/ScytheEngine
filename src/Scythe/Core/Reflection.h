@@ -50,7 +50,7 @@ namespace Scythe::Reflect
     {                                                                        \
         Type##_Registrar()                                                   \
         {                                                                    \
-            ::Scythe::Reflect::GetRegistry<Base>().push_back(                \
+            ::Scythe::Reflect::GetRegistry<Base>().emplace_back(             \
                 ::Scythe::Reflect::TypeInfo<Base>{                           \
                     #Type,                                                   \
                     ::Scythe::Reflect::TypeID<Type>(),                       \
@@ -64,5 +64,8 @@ namespace Scythe::Reflect
 namespace Scythe
 {
 #define SCYTHE_COMPONENT(Type) SCYTHE_REGISTER_IMPL(Scythe::Component, Type)
-#define SCYTHE_SUBSYSTEM(Type) SCYTHE_REGISTER_IMPL(Scythe::Subsystem, Type)
+#define SCYTHE_SUBSYSTEM(Type) SCYTHE_REGISTER_IMPL(Scythe::Subsystem, Type)    \
+    public:                                                                     \
+        const char* GetName() const override { return #Type; }                  \
+    private:
 }

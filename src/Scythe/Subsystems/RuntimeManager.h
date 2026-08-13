@@ -15,8 +15,7 @@ namespace Scythe
         void RemoveScene(const Scene* target);
         Scene* CreateScene(const std::string& name);
         
-        const char* GetName() const override { return "RuntimeManager"; }
     private:
-        std::vector<std::unique_ptr<Scene>> m_Scenes;
+        std::vector<UniquePtr<Scene>> m_Scenes;
     };
 }
