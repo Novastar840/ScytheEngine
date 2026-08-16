@@ -1,7 +1,5 @@
 ﻿#include "GameObject.h"
 
-#include "spdlog/spdlog.h"
-
 namespace Scythe
 {
     GameObject::GameObject(const std::string& name)

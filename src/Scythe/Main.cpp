@@ -2,7 +2,7 @@
 
 #include "Model.h"
 #include "Core/Window.h"
-#include "GameObject.h"
+#include "Core/GameObject.h"
 
 #include <glm/gtc/type_ptr.hpp>
 

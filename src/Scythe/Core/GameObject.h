@@ -2,7 +2,7 @@
 
 #include <utility>
 
-#include "Core/Component.h"
+#include "Component.h"
 
 namespace Scythe
 {

@@ -102,7 +102,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 set(ENGINE_TEST_SOURCES
-        src/Scythe/GameObject.cpp
+        src/Scythe/Core/GameObject.cpp
         src/Scythe/Components/TransformComponent.cpp
         src/Scythe/Core/Scene.cpp
 )

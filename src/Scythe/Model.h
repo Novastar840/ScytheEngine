@@ -4,7 +4,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 
-#include "GameObject.h"
+#include "Core/GameObject.h"
 
 namespace Scythe
 {
