@@ -18,9 +18,10 @@ namespace Scythe
         explicit MeshRendererComponent(Model&& model);
 
         void Draw(const std::shared_ptr<Shader>& shader) const;
-
-    private:
+    
+    protected:
         void OnAttach(GameObject* owner) override;
+    private:
         std::shared_ptr<Model> m_Model;
     };
 }

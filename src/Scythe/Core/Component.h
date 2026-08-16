@@ -15,7 +15,6 @@ namespace Scythe
         
         virtual uint32_t GetTypeID() const = 0;
         
-        virtual void OnAttach(GameObject* owner) {}
         virtual void OnDetach() {}
         virtual void Update(float deltaTime) {}
         virtual std::unique_ptr<Component> Clone() const = 0;
@@ -25,6 +24,8 @@ namespace Scythe
     protected:
         Component() = default;
         GameObject* m_Owner;
+        
+        virtual void OnAttach(GameObject* owner) {}
         
         static inline uint32_t s_NextTypeID = 0;
         
