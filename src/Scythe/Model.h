@@ -14,7 +14,7 @@ namespace Scythe
     {
     public:
         Model(const std::string& path, const std::string& name);
-        Model(const std::string&& path, const std::string&& name);
+        Model(std::string&& path, std::string&& name);
         void Draw(const std::shared_ptr<Shader>& shader) const;
 
     private:
