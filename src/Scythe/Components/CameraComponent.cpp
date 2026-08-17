@@ -4,6 +4,15 @@
 
 namespace Scythe
 {
+    CameraComponent::CameraComponent(const CameraPerspectiveProperties& properties)
+        : m_Fov(properties.Fov),
+          m_AspectRatio(properties.AspectRatio),
+          m_NearPlane(properties.NearPlane),
+          m_FarPlane(properties.FarPlane)
+    {
+        RecalculateProjection();
+    }
+
     void CameraComponent::SetPerspective(float fovDegrees, float aspectRatio, float nearPlane, float farPlane)
     {
         m_ProjectionType = ProjectionType::Perspective;

@@ -19,7 +19,7 @@ namespace Scythe
     {
         float Bottom = -1.0f;
         float Top = 1.0f;
-        float Left = 16.f / 9;
+        float Left = -16.f / 9;
         float Right = 16.f / 9;
         float NearPlane = 0.1f;
         float FarPlane = 1000.0f;
@@ -32,7 +32,8 @@ namespace Scythe
         
     public:
         CameraComponent() = default;
-        
+        CameraComponent(const CameraPerspectiveProperties& properties);
+
         void SetPerspective(float fovDegrees, float aspectRatio, float nearPlane, float farPlane);
         void SetPerspective(const CameraPerspectiveProperties& properties);
         void SetOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane);
