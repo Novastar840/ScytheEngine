@@ -8,15 +8,15 @@
 namespace Scythe
 {
     Model::Model(const std::string& path, const std::string& name)
-        : m_Directory(path), m_Name(name)
+        : m_Name(name)
     {
         loadModel(path);
     }
 
     Model::Model(std::string&& path, std::string&& name)
-        : m_Directory(std::move(path)), m_Name(std::move(name))
+        : m_Name(std::move(name))
     {
-        loadModel(m_Directory);
+        loadModel(path);
     }
 
     void Model::Draw(const std::shared_ptr<Shader>& shader) const
