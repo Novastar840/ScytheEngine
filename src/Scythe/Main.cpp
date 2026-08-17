@@ -16,17 +16,23 @@
 
 using namespace Scythe;
 
-static GameObject SetupCamera()
+static void SetupCamera(GameObject& camera)
 {
-	GameObject camera("Camera");
+	constexpr float FovDegrees = 45.0f;
+	constexpr float AspectRatio = 800.0f / 600.0f;
+	constexpr float NearPlane = 0.1f;
+	constexpr float FarPlane = 100.0f;
 
-	auto& camTransformComponent = camera.AddComponent<TransformComponent>(Vec3(0.0f, 0.5f, 2.0f));
-	camTransformComponent.LookAtRotation(Vec3(0.0f, 0.4f, 0.0f));
+	auto& camTransform = camera.AddComponent<TransformComponent>(Vec3(0.0f, 0.5f, 2.0f));
+	camTransform.LookAtRotation(Vec3(0.0f, 0.4f, 0.0f));
 
-	auto& camComp = camera.AddComponent<CameraComponent>();
-	camComp.SetPerspective(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
-
-	return camera;
+	CameraPerspectiveProperties camProps{
+		.Fov = FovDegrees,
+		.AspectRatio = AspectRatio,
+		.NearPlane = NearPlane,
+		.FarPlane = FarPlane
+	};
+	camera.AddComponent<CameraComponent>(camProps);
 }
 
 int main()
@@ -44,7 +50,8 @@ int main()
 
 		spdlog::info("Working dir: {} ", std::filesystem::current_path().string());
 
-		GameObject camera = SetupCamera();
+		GameObject camera("Camera");
+		SetupCamera(camera);
 		CameraComponent* camComp = camera.GetComponent<CameraComponent>();
 
 		auto shader = Shader::Create("assets/shaders/basic.vert", "assets/shaders/basic.frag");
