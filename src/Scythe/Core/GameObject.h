@@ -8,6 +8,7 @@ namespace Scythe
 {
     class GameObject
     {
+        SCYTHE_GAME_OBJECT(GameObject)
     public:
         using ID = uint64_t;
         static constexpr ID INVALID_ID = 0xFFFFFFFFFFFFFFFFULL;

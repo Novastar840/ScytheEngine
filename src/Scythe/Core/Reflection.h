@@ -64,6 +64,7 @@ namespace Scythe::Reflect
 namespace Scythe
 {
 #define SCYTHE_COMPONENT(Type) SCYTHE_REGISTER_IMPL(Scythe::Component, Type)
+#define SCYTHE_GAME_OBJECT(Type) SCYTHE_REGISTER_IMPL(Scythe::GameObject, Type)
 #define SCYTHE_SUBSYSTEM(Type) SCYTHE_REGISTER_IMPL(Scythe::Subsystem, Type)    \
     public:                                                                     \
         const char* GetName() const override { return #Type; }                  \
