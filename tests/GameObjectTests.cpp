@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include "GameObject.h"
+#include "Core/GameObject.h"
 #include "Components/TransformComponent.h"
 //#include "Core/Component.h"
 
