@@ -19,7 +19,7 @@ namespace Scythe
     }
     
     GameObject::GameObject(const GameObject& other)
-        : m_ID(s_NextID++), m_Name(other.m_Name)
+        : m_ID(++s_NextID), m_Name(other.m_Name)
     {
         m_Components.reserve(other.m_Components.size());
         for (const auto& component : other.m_Components)
@@ -38,5 +38,18 @@ namespace Scythe
         m_Components.push_back(std::move(component));
         rawPtr->m_Owner = this;
         rawPtr->OnAttach(this);
+    }
+
+    SceneObject::SceneObject(const SceneObject& other)
+        : GameObject(other)
+    {
+        m_TransformComponent = GetComponent<TransformComponent>();
+    }
+
+    SceneObject::SceneObject(SceneObject&& other) noexcept
+        : GameObject(std::move(other))
+    {
+        m_TransformComponent = other.m_TransformComponent;
+        other.m_TransformComponent = nullptr;
     }
 }
