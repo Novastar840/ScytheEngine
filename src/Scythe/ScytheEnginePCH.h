@@ -12,6 +12,7 @@
 #include <functional>
 #include <algorithm>
 #include <array>
+#include <string_view>
 
 // ==========================================
 // 2. Third-Party Libraries
@@ -21,6 +22,7 @@
 #include <GLFW/glfw3.h>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <spdlog/spdlog.h>
 
 // Assimp is usually only needed in the Mesh/Model loader, 
