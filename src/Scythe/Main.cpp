@@ -16,16 +16,13 @@
 
 using namespace Scythe;
 
-static void SetupCamera(GameObject& camera)
+static void SetupCamera(SceneObject& camera)
 {
 	constexpr float FovDegrees = 45.0f;
 	constexpr float AspectRatio = 800.0f / 600.0f;
 	constexpr float NearPlane = 0.1f;
 	constexpr float FarPlane = 100.0f;
-
-	auto& camTransform = camera.AddComponent<TransformComponent>(Vec3(0.0f, 0.5f, 2.0f));
-	camTransform.LookAtRotation(Vec3(0.0f, 0.4f, 0.0f));
-
+	
 	CameraPerspectiveProperties camProps{
 		.Fov = FovDegrees,
 		.AspectRatio = AspectRatio,
@@ -50,22 +47,24 @@ int main()
 
 		spdlog::info("Working dir: {} ", std::filesystem::current_path().string());
 
-		GameObject camera("Camera");
+		SceneObject camera("Camera", Vec3(0.0f, 1.f, 2.0f));
 		SetupCamera(camera);
 		CameraComponent* camComp = camera.GetComponent<CameraComponent>();
 
 		auto shader = Shader::Create("assets/shaders/basic.vert", "assets/shaders/basic.frag");
 		shader->Bind();
 
-		GameObject bunny("StanfordBunny");
-
-		auto& bunnyTransform = bunny.AddComponent<TransformComponent>(Vec3(0.0f, -0.085f, 0.0f));
-		bunnyTransform.SetScale(5.f);
+		SceneObject bunny("StanfordBunny", Vec3(0), Vec3(0), Vec3(5));
+		auto bunnyTransform = bunny.GetTransformComponent();
 
 		Model bunnyModel("assets/models/stanford-bunny.obj", "StanfordBunny");
 
 		bunny.AddComponent<MeshRendererComponent>(std::move(bunnyModel));
 		spdlog::info("Model loaded");
+		
+		Vec3 bunnyPosition = bunnyTransform->GetPosition();
+		bunnyPosition.y += 0.5f;
+		camera.LookAtRotation(bunnyPosition);
 
 		RendererAPI::Get()->SetClearColor(Vec4(0.2f, 0.2f, 0.3f, 1.0f));
 
@@ -85,7 +84,7 @@ int main()
 			RendererAPI::Get()->Clear();
 
 			bunnyYaw += 60.0f * deltaTime;
-			bunnyTransform.SetRotation(Vec3(0.0f, bunnyYaw, 0.0f));
+			bunnyTransform->SetRotation(Vec3(0.0f, bunnyYaw, 0.0f));
 
 			Mat4 viewMatrix = camComp->GetViewMatrix(*camera.GetComponent<TransformComponent>());
 			Mat4 projMatrix = camComp->GetProjectionMatrix();
