@@ -1,4 +1,4 @@
-﻿#include "GameObject.h"
+#include "GameObject.h"
 
 namespace Scythe
 {
@@ -31,7 +31,7 @@ namespace Scythe
             rawPtr->OnAttach(this);
         }
     }
-
+    
     void GameObject::AttachRaw(std::unique_ptr<Component> component)
     {
         Component* rawPtr = component.get();
@@ -40,10 +40,79 @@ namespace Scythe
         rawPtr->OnAttach(this);
     }
 
+    void GameObject::DetachAllComponents()
+    {
+        for (auto& comp : m_Components)
+        {
+            comp->OnDetach();
+        }
+    }
+
     SceneObject::SceneObject(const SceneObject& other)
         : GameObject(other)
     {
         m_TransformComponent = GetComponent<TransformComponent>();
+    }
+
+    GameObject& GameObject::operator=(const GameObject& other)
+    {
+        if (this == &other)
+            return *this;
+
+        m_ID = ++s_NextID;
+        m_Name = other.m_Name;
+
+        m_Components.clear();
+        m_Components.reserve(other.m_Components.size());
+        for (const auto& component : other.m_Components)
+        {
+            auto cloned = component->Clone();
+            Component* rawPtr = cloned.get();
+            m_Components.push_back(std::move(cloned));
+            rawPtr->m_Owner = this;
+            rawPtr->OnAttach(this);
+        }
+
+        return *this;
+    }
+
+    GameObject& GameObject::operator=(GameObject&& other) noexcept
+    {
+        if (this == &other)
+            return *this;
+        
+        m_ID = std::exchange(other.m_ID, INVALID_ID);
+        m_Name = std::move(other.m_Name);
+        m_Components = std::move(other.m_Components);
+
+        for (auto& comp : m_Components)
+        {
+            comp->OnDetach();
+            comp->m_Owner = this;
+        }
+
+        return *this;
+    }
+
+    SceneObject& SceneObject::operator=(const SceneObject& other)
+    {
+        if (this == &other)
+            return *this;
+
+        *static_cast<GameObject*>(this) = other;
+        m_TransformComponent = GetComponent<TransformComponent>();
+        return *this;
+    }
+
+    SceneObject& SceneObject::operator=(SceneObject&& other) noexcept
+    {
+        if (this == &other)
+            return *this;
+
+        *static_cast<GameObject*>(this) = std::move(other);
+        m_TransformComponent = other.m_TransformComponent;
+        other.m_TransformComponent = nullptr;
+        return *this;
     }
 
     SceneObject::SceneObject(SceneObject&& other) noexcept

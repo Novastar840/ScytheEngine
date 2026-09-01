@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <utility>
 
@@ -18,7 +18,10 @@ namespace Scythe
         
         GameObject(const GameObject& other);
         GameObject(GameObject&& other) noexcept;
-        
+
+        GameObject& operator=(const GameObject& other);
+        GameObject& operator=(GameObject&& other) noexcept;
+
         template <typename... Ts>
             requires (sizeof...(Ts) > 0 && (std::derived_from<Ts, Component> && ...))
         GameObject(const std::string& name, std::unique_ptr<Ts>... components)
@@ -92,7 +95,6 @@ namespace Scythe
                 });
             if (it != m_Components.end())
             {
-                (*it)->OnDetach();
                 m_Components.erase(it);
             }
         }
@@ -111,6 +113,7 @@ namespace Scythe
         std::vector<std::unique_ptr<Component>> m_Components;
         
         void AttachRaw(std::unique_ptr<Component> component);
+        void DetachAllComponents();
         
     private:
         static inline uint64_t s_NextID = 0;
@@ -135,7 +138,10 @@ namespace Scythe
         
         SceneObject(const SceneObject& other);
         SceneObject(SceneObject&& other) noexcept;
-        
+
+        SceneObject& operator=(const SceneObject& other);
+        SceneObject& operator=(SceneObject&& other) noexcept;
+
         template <typename T, typename... Args>
             requires std::derived_from<T, ComponentImpl<T>> && std::constructible_from<T, Args...>
         T* AddComponent(Args&&... args)
@@ -183,6 +189,8 @@ namespace Scythe
         Vec3 GetPosition() const {return m_TransformComponent->GetPosition();}
         Quat GetRotation() const {return m_TransformComponent->GetRotation();}
         Vec3 GetScale() const {return m_TransformComponent->GetScale();}
+        
+        void LookAtRotation(Vec3 lookAtPosition) const {m_TransformComponent->LookAtRotation(lookAtPosition);}
     private:
         TransformComponent* m_TransformComponent;
     };
