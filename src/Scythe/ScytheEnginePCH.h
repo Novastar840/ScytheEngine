@@ -33,13 +33,9 @@
 // #include <assimp/postprocess.h>
 
 // ==========================================
-// 3. Engine Files
+// 3. Engine Core Type Aliases
 // ==========================================
-#include "Core/Reflection.h"
 
-// ==========================================
-// 4. Engine Core Type Aliases
-// ==========================================
 namespace Scythe {
     // Math Types
     using Vec2 = glm::vec2;
@@ -58,3 +54,9 @@ namespace Scythe {
     template<typename T>
     using WeakPtr = std::weak_ptr<T>;
 }
+
+// ==========================================
+// 4. Engine Files
+// ==========================================
+#include "Core/Reflection.h"
+#include "Core/CoordinateSystem.h"

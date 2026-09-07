@@ -3,10 +3,11 @@
 #include "Core/Component.h"
 #include "Components/TransformComponent.h"
 
-namespace Scythe
-{
+// Camera view matrix uses the transform's forward axis as the look direction.
+
+namespace Scythe {
     enum class ProjectionType { Perspective, Orthographic };
-    
+
     struct CameraPerspectiveProperties
     {
         float Fov = 45.0f;
@@ -14,7 +15,7 @@ namespace Scythe
         float NearPlane = 0.1f;
         float FarPlane = 1000.0f;
     };
-    
+
     struct CameraOrthographicProperties
     {
         float Bottom = -1.0f;
@@ -24,12 +25,11 @@ namespace Scythe
         float NearPlane = 0.1f;
         float FarPlane = 1000.0f;
     };
-    
+
     class CameraComponent : public ComponentImpl<CameraComponent>
     {
         SCYTHE_COMPONENT(CameraComponent)
         DECLARE_COMPONENT_DEPENDENCY(TransformComponent);
-        
     public:
         CameraComponent() = default;
         CameraComponent(const CameraPerspectiveProperties& properties);
@@ -40,6 +40,8 @@ namespace Scythe
         void SetOrthographic(const CameraOrthographicProperties& properties);
         void SetAspectRatio(float aspectRatio);
 
+        /// Returns the camera's view matrix.
+        /// The camera looks along its transform's forward axis.
         Mat4 GetViewMatrix(const TransformComponent& transform) const;
         Mat4 GetProjectionMatrix() const { return m_ProjectionMatrix; }
 

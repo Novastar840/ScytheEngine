@@ -4,8 +4,9 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 
-namespace Scythe
-{
+// Coordinate convention: X-forward, Y-up, Z-right.
+
+namespace Scythe {
     class TransformComponent : public ComponentImpl<TransformComponent>
     {
         SCYTHE_COMPONENT(TransformComponent)
@@ -29,8 +30,11 @@ namespace Scythe
 
         Mat4 GetTransformMatrix() const;
 
+        /// Returns the object's local forward direction (X-axis by convention).
         Vec3 GetForwardVector() const;
+        /// Returns the object's local right direction (Z-axis by convention).
         Vec3 GetRightVector() const;
+        /// Returns the object's local up direction (Y-axis by convention).
         Vec3 GetUpVector() const;
         void LookAtRotation(Vec3 lookAtPosition);
 
