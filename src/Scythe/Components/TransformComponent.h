@@ -6,7 +6,8 @@
 
 // Coordinate convention: X-forward, Y-up, Z-right.
 
-namespace Scythe {
+namespace Scythe 
+{
     class TransformComponent : public ComponentImpl<TransformComponent>
     {
         SCYTHE_COMPONENT(TransformComponent)
