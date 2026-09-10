@@ -5,7 +5,7 @@ namespace Scythe
     SceneObject::SceneObject(const SceneObject& other)
     : GameObject(other)
     {
-        m_TransformComponent = GetComponent<TransformComponent>();
+        m_TransformComponent = other.m_TransformComponent;
     }
     
     SceneObject& SceneObject::operator=(const SceneObject& other)
@@ -14,7 +14,7 @@ namespace Scythe
             return *this;
 
         GameObject::operator=(other);
-        m_TransformComponent = GetComponent<TransformComponent>();
+        m_TransformComponent = other.m_TransformComponent;
         return *this;
     }
 
@@ -24,15 +24,13 @@ namespace Scythe
             return *this;
 
         GameObject::operator=(std::move(other));
-        m_TransformComponent = other.m_TransformComponent;
-        other.m_TransformComponent = nullptr;
+        m_TransformComponent = std::move(other.m_TransformComponent);
         return *this;
     }
 
     SceneObject::SceneObject(SceneObject&& other) noexcept
         : GameObject(std::move(other))
     {
-        m_TransformComponent = other.m_TransformComponent;
-        other.m_TransformComponent = nullptr;
+        m_TransformComponent = std::move(other.m_TransformComponent);
     }
 }

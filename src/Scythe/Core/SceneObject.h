@@ -16,10 +16,8 @@ namespace Scythe
             Quat rot = Quat(1.0f, 0.0f, 0.0f, 0.0f), 
             Vec3 scale = Vec3(1.f),
             std::unique_ptr<Ts>... components)
-                : GameObject(name, MakeComponent<TransformComponent>(pos, rot, scale), std::move(components)...)
+                : GameObject(name, std::move(components)...), m_TransformComponent(pos, rot, scale)
         {
-            Component* rawPtr = m_Components.front().get();
-            m_TransformComponent = static_cast<TransformComponent*>(rawPtr);
         }
         
         SceneObject(const SceneObject& other);
@@ -40,6 +38,20 @@ namespace Scythe
             else
             {
                 return GameObject::AddComponent<T>(std::forward<Args>(args)...);
+            }
+        }
+        
+        template <typename T>
+            requires std::derived_from<T, ComponentImpl<T>>
+        T* GetComponent() const
+        {
+            if constexpr (std::is_same_v<T, TransformComponent>)
+            {
+                return const_cast<T*>(&m_TransformComponent);
+            }
+            else
+            {
+                return GameObject::GetComponent<T>();
             }
         }
         
@@ -71,13 +83,13 @@ namespace Scythe
             }
         }
         
-        TransformComponent* GetTransformComponent() const {return m_TransformComponent;}
-        Vec3 GetPosition() const {return m_TransformComponent->GetPosition();}
-        Quat GetRotation() const {return m_TransformComponent->GetRotation();}
-        Vec3 GetScale() const {return m_TransformComponent->GetScale();}
+        TransformComponent* GetTransformComponent() const {return const_cast<TransformComponent*>(&m_TransformComponent);}
+        Vec3 GetPosition() const {return m_TransformComponent.GetPosition();}
+        Quat GetRotation() const {return m_TransformComponent.GetRotation();}
+        Vec3 GetScale() const {return m_TransformComponent.GetScale();}
         
-        void LookAtRotation(Vec3 lookAtPosition) const {m_TransformComponent->LookAtRotation(lookAtPosition);}
+        void LookAtRotation(Vec3 lookAtPosition) {m_TransformComponent.LookAtRotation(lookAtPosition);}
     private:
-        TransformComponent* m_TransformComponent;
+        TransformComponent m_TransformComponent;
     };   
 }
