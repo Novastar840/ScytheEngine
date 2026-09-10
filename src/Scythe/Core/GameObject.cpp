@@ -99,7 +99,7 @@ namespace Scythe
         if (this == &other)
             return *this;
 
-        *static_cast<GameObject*>(this) = other;
+        GameObject::operator=(other);
         m_TransformComponent = GetComponent<TransformComponent>();
         return *this;
     }
@@ -109,7 +109,7 @@ namespace Scythe
         if (this == &other)
             return *this;
 
-        *static_cast<GameObject*>(this) = std::move(other);
+        GameObject::operator=(std::move(other));
         m_TransformComponent = other.m_TransformComponent;
         other.m_TransformComponent = nullptr;
         return *this;
