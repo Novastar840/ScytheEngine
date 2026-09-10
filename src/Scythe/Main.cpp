@@ -2,7 +2,7 @@
 
 #include "Model.h"
 #include "Core/Window.h"
-#include "Core/GameObject.h"
+#include "Core/SceneObject.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -12,7 +12,6 @@
 #include "Core/RendererAPI.h"
 #include "Core/Shader.h"
 #include "Core/SubsystemManager.h"
-#include "Subsystems/RuntimeManager.h"
 
 using namespace Scythe;
 
