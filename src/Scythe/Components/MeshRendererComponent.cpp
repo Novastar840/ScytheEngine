@@ -2,7 +2,6 @@
 #include "TransformComponent.h"
 #include "Model.h"
 #include "Core/Shader.h"
-#include <spdlog/spdlog.h>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Scythe
