@@ -2,6 +2,8 @@
 #include "Core/Component.h"
 #include <memory>
 
+#include "TransformComponent.h"
+
 namespace Scythe
 {
     class Model;
@@ -23,5 +25,6 @@ namespace Scythe
         void OnAttach(GameObject* owner) override;
     private:
         std::shared_ptr<Model> m_Model;
+        TransformComponent* m_TransformComponent = nullptr;
     };
 }

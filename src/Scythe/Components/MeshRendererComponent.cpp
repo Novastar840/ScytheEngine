@@ -19,7 +19,8 @@ namespace Scythe
 
     void MeshRendererComponent::OnAttach(GameObject* owner)
     {
-        if (!owner->HasComponent<TransformComponent>())
+        m_TransformComponent = owner->GetComponent<TransformComponent>();
+        if (!m_TransformComponent)
         {
             spdlog::error("MeshRendererComponent on '{}' requires a TransformComponent!", owner->GetName());
         }
@@ -29,10 +30,9 @@ namespace Scythe
     {
         if (!m_Model) return;
 
-        const auto* transform = m_Owner->GetComponent<TransformComponent>();
-        if (transform)
+        if (m_TransformComponent)
         {
-            shader->SetMat4("uModel", glm::value_ptr(transform->GetTransformMatrix()));
+            shader->SetMat4("uModel", glm::value_ptr(m_TransformComponent->GetTransformMatrix()));
         }
 
         m_Model->Draw(shader);
