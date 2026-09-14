@@ -16,9 +16,9 @@ namespace Scythe
             Quat rot = Quat(1.0f, 0.0f, 0.0f, 0.0f), 
             Vec3 scale = Vec3(1.f),
             std::unique_ptr<Ts>... components)
-                : GameObject(name, std::move(components)...), m_TransformComponent(pos, rot, scale)
-        {
-        }
+                : GameObject(StaticComponentsTag<TransformComponent>{}, name, std::move(components)...), 
+                m_TransformComponent(pos, rot, scale)
+        {}
         
         SceneObject(const SceneObject& other);
         SceneObject(SceneObject&& other) noexcept;
@@ -40,6 +40,9 @@ namespace Scythe
                 return GameObject::AddComponent<T>(std::forward<Args>(args)...);
             }
         }
+        
+        bool HasComponentTypeID(uint32_t typeID) const override;
+        Component* GetComponentByID(uint32_t typeID) const override;
         
         template <typename T>
             requires std::derived_from<T, ComponentImpl<T>>

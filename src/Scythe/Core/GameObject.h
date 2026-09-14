@@ -21,18 +21,41 @@ namespace Scythe
 
         GameObject& operator=(const GameObject& other);
         GameObject& operator=(GameObject&& other) noexcept;
-
-        template <typename... Ts>
-            requires (sizeof...(Ts) > 0 && (std::derived_from<Ts, Component> && ...))
-        GameObject(const std::string& name, std::unique_ptr<Ts>... components)
+        
+        template <typename... StaticComps, typename... Ts>
+            requires (std::derived_from<Ts, Component> && ...)
+        GameObject(StaticComponentsTag<StaticComps...>, const std::string& name, UniquePtr<Ts>... components)
             : m_ID(++s_NextID), m_Name(name)
         {
-            static_assert(Component::PackDependenciesSatisfied<Component::TypeList<Ts...>>::value,
+            using Available = TypeList<StaticComps..., Ts...>;
+            static_assert(PackDependenciesSatisfied<Available>::value,
                 "GameObject constructor pack is missing required components");
             
-            m_Components.reserve(sizeof...(Ts));
-            (AttachRaw(std::move(components)), ...); 
+            if constexpr (sizeof...(Ts) > 0)
+            {
+                m_Components.reserve(sizeof...(Ts));
+                (AttachRaw(std::move(components)), ...);    
+            }
         }
+        
+        template <typename... Ts>
+            requires (std::derived_from<Ts, Component> && ...)
+        GameObject(const std::string& name, UniquePtr<Ts>... components)
+            : m_ID(++s_NextID), m_Name(name) 
+        {
+            using Available = TypeList<Ts...>;
+            static_assert(PackDependenciesSatisfied<Available>::value,
+                "GameObject constructor pack is missing required components");
+            
+            if constexpr (sizeof...(Ts) > 0)
+            {
+                m_Components.reserve(sizeof...(Ts));
+                (AttachRaw(std::move(components)), ...);    
+            }
+        }
+        
+        virtual bool HasComponentTypeID(uint32_t typeID) const;
+        virtual Component* GetComponentByID(uint32_t typeID) const;
 
         virtual ~GameObject() = default;
 
@@ -44,13 +67,28 @@ namespace Scythe
             requires std::derived_from<T, ComponentImpl<T>> && std::constructible_from<T, Args...>
         T* AddComponent(Args&&... args)
         {
-            static_assert(!Component::TypeListContains<T, Component::ComponentRequiresList<T>>::value,
+            static_assert(!TypeListContains<T, ComponentRequiresList<T>>::value,
                 "A component cannot list itself as a dependency");
-            static_assert(Component::AllDeriveFromComponent<Component::ComponentRequiresList<T>>::value,
+            static_assert(AllDeriveFromComponent<ComponentRequiresList<T>>::value,
                 "All required types must derive from Component");
-            static_assert(!Component::HasCircularDependency<T>::value,
+            static_assert(!HasCircularDependency<T>::value,
                 "Circular dependency detected in component dependency graph");
 
+            bool deps_satisfied = true;
+            T::ForEachRequiredTypeID([&](uint32_t reqID) 
+            {
+                if (!this->HasComponentTypeID(reqID)) 
+                {
+                    deps_satisfied = false;
+                }
+            });
+
+            if (!deps_satisfied) 
+            {
+                spdlog::error("Cannot add component '{}': missing required component", typeid(T).name());
+                return nullptr;
+            }
+            
             auto component = std::make_unique<T>(std::forward<Args>(args)...);
             Component* rawPtr = component.get();
 
@@ -65,21 +103,14 @@ namespace Scythe
             requires std::derived_from<T, ComponentImpl<T>>
         T* GetComponent() const
         {
-            for (const auto& comp : m_Components)
-            {
-                if (comp->GetTypeID() == T::StaticTypeID())
-                {
-                    return static_cast<T*>(comp.get());
-                }
-            }
-            return nullptr;
+            return static_cast<T*>(GetComponentByID(T::StaticTypeID()));
         }
 
         template <typename T>
             requires std::derived_from<T, ComponentImpl<T>>
         bool HasComponent() const
         {
-            return GetComponent<T>() != nullptr;
+            return HasComponentTypeID(T::StaticTypeID());
         }
 
         template <typename T>

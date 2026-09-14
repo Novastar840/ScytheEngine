@@ -87,4 +87,22 @@ namespace Scythe
 
         return *this;
     }
+
+    bool GameObject::HasComponentTypeID(uint32_t typeID) const
+    {
+        for (const auto& comp : m_Components) 
+        {
+            if (comp->GetTypeID() == typeID) return true;
+        }
+        return false;
+    }
+
+    Component* GameObject::GetComponentByID(uint32_t typeID) const
+    {
+        for (const auto& comp : m_Components)
+        {
+            if (comp->GetTypeID() == typeID) return comp.get();
+        }
+        return nullptr;
+    }
 }
