@@ -88,7 +88,7 @@ namespace Scythe
         return *this;
     }
 
-    bool GameObject::HasComponentTypeID(uint32_t typeID) const
+    bool GameObject::HasComponentTypeID(uint32_t typeID)
     {
         for (const auto& comp : m_Components) 
         {
@@ -97,7 +97,7 @@ namespace Scythe
         return false;
     }
 
-    Component* GameObject::GetComponentByID(uint32_t typeID) const
+    Component* GameObject::GetComponentByID(uint32_t typeID)
     {
         for (const auto& comp : m_Components)
         {

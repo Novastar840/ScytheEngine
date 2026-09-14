@@ -54,8 +54,8 @@ namespace Scythe
             }
         }
         
-        virtual bool HasComponentTypeID(uint32_t typeID) const;
-        virtual Component* GetComponentByID(uint32_t typeID) const;
+        virtual bool HasComponentTypeID(uint32_t typeID);
+        virtual Component* GetComponentByID(uint32_t typeID);
 
         virtual ~GameObject() = default;
 
@@ -101,14 +101,14 @@ namespace Scythe
 
         template <typename T>
             requires std::derived_from<T, ComponentImpl<T>>
-        T* GetComponent() const
+        T* GetComponent()
         {
             return static_cast<T*>(GetComponentByID(T::StaticTypeID()));
         }
 
         template <typename T>
             requires std::derived_from<T, ComponentImpl<T>>
-        bool HasComponent() const
+        bool HasComponent()
         {
             return HasComponentTypeID(T::StaticTypeID());
         }

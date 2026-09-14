@@ -41,16 +41,16 @@ namespace Scythe
             }
         }
         
-        bool HasComponentTypeID(uint32_t typeID) const override;
-        Component* GetComponentByID(uint32_t typeID) const override;
+        bool HasComponentTypeID(uint32_t typeID) override;
+        Component* GetComponentByID(uint32_t typeID) override;
         
         template <typename T>
             requires std::derived_from<T, ComponentImpl<T>>
-        T* GetComponent() const
+        T* GetComponent()
         {
             if constexpr (std::is_same_v<T, TransformComponent>)
             {
-                return const_cast<T*>(&m_TransformComponent);
+                return &m_TransformComponent;
             }
             else
             {
@@ -86,7 +86,7 @@ namespace Scythe
             }
         }
         
-        TransformComponent* GetTransformComponent() const {return const_cast<TransformComponent*>(&m_TransformComponent);}
+        TransformComponent* GetTransformComponent() {return &m_TransformComponent;}
         Vec3 GetPosition() const {return m_TransformComponent.GetPosition();}
         Quat GetRotation() const {return m_TransformComponent.GetRotation();}
         Vec3 GetScale() const {return m_TransformComponent.GetScale();}

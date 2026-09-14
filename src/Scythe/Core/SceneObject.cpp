@@ -28,16 +28,16 @@ namespace Scythe
         return *this;
     }
 
-    bool SceneObject::HasComponentTypeID(uint32_t typeID) const
+    bool SceneObject::HasComponentTypeID(uint32_t typeID)
     {
         if (typeID == TransformComponent::StaticTypeID()) return true;
         return GameObject::HasComponentTypeID(typeID);
     }
 
-    Component* SceneObject::GetComponentByID(uint32_t typeID) const
+    Component* SceneObject::GetComponentByID(uint32_t typeID)
     {
         if (typeID == TransformComponent::StaticTypeID()) 
-            return const_cast<TransformComponent*>(&m_TransformComponent);
+            return &m_TransformComponent;
             
         return GameObject::GetComponentByID(typeID);
     }
