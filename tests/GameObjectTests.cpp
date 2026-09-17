@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
-#include "Core/GameObject.h"
 #include "Components/TransformComponent.h"
+#include "Core/SceneObject.h"
 #include "Core/Timers.h"
 
 using namespace Scythe;
