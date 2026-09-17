@@ -101,12 +101,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-set(ENGINE_TEST_SOURCES
-        src/Scythe/Core/GameObject.cpp
-        src/Scythe/Components/TransformComponent.cpp
-        src/Scythe/Core/Scene.cpp
-)
-
+file(GLOB_RECURSE ENGINE_TEST_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+list(FILTER ENGINE_TEST_SOURCES EXCLUDE REGEX ".*Main\\.cpp$")
 file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "tests/*.cpp")
 
 add_executable(ScytheTests ${TEST_SOURCES} ${ENGINE_TEST_SOURCES})
@@ -123,6 +119,7 @@ target_link_libraries(ScytheTests PRIVATE
         spdlog::spdlog
         glad
         glfw
+        assimp
 )
 
 target_compile_definitions(ScytheTests PRIVATE _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING)
