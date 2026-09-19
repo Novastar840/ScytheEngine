@@ -14,10 +14,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS ON CACHE BOOL "" FORCE)
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+include_directories(${CMAKE_BINARY_DIR}/generated)
+
+add_subdirectory(src/Tools/HeaderTool)
+
 file(GLOB_RECURSE ENGINE_SOURCES
         CONFIGURE_DEPENDS
-        "src/*.cpp"
-        "src/*.h"
+        "src/Scythe/*.cpp"
+        "src/Scythe/*.h"
 )
 
 #list(FILTER ENGINE_SOURCES EXCLUDE REGEX ".*ScytheEnginePCH\\.h$")
@@ -65,7 +70,7 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE) # Static linking is usually bette
 
 FetchContent_MakeAvailable(glfw glm assimp)
 
-FetchContent_Declare(spdlog GIT_REPOSITORY https://github.com/gabime/spdlog.git GIT_TAG v1.11.0)
+FetchContent_Declare(spdlog GIT_REPOSITORY https://github.com/gabime/spdlog.git GIT_TAG v1.17.0)
 FetchContent_MakeAvailable(spdlog)
 
 add_library(glad STATIC vendor/glad/src/gl.c)
@@ -101,7 +106,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-file(GLOB_RECURSE ENGINE_TEST_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+file(GLOB_RECURSE ENGINE_TEST_SOURCES CONFIGURE_DEPENDS "src/Scythe/*.cpp")
 list(FILTER ENGINE_TEST_SOURCES EXCLUDE REGEX ".*Main\\.cpp$")
 file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "tests/*.cpp")
 
