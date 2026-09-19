@@ -25,8 +25,6 @@ file(GLOB_RECURSE ENGINE_SOURCES
         "src/Scythe/*.h"
 )
 
-#list(FILTER ENGINE_SOURCES EXCLUDE REGEX ".*ScytheEnginePCH\\.h$")
-
 add_executable(EngineApp ${ENGINE_SOURCES})
 
 set(ENGINE_PCH "src/Scythe/ScytheEnginePCH.h")
