@@ -212,7 +212,7 @@ endif()
 add_executable(ScytheHeaderTool src/Main.cpp)
 
 target_include_directories(ScytheHeaderTool PRIVATE ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})
-target_compile_definitions(ScytheHeaderTool PRIVATE ${LLVM_DEFINITIONS})
+target_compile_definitions(ScytheHeaderTool PRIVATE ${LLVM_DEFINITIONS} __SCYTHE_HEADER_TOOL__)
 target_compile_options(ScytheHeaderTool PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>)
 
 target_link_libraries(ScytheHeaderTool PRIVATE
@@ -222,3 +222,17 @@ target_link_libraries(ScytheHeaderTool PRIVATE
         clangSerialization
         clangBasic
 )
+
+# --- vcpkg dynamic-triplet runtime DLLs must sit next to the exe -------------
+if(WIN32 AND DEFINED _vcpkg_prefix)
+    set(_sht_runtime_dlls zstd.dll z.dll)   # from dumpbin /dependents; extend if it ever shows more
+    foreach(_dll IN LISTS _sht_runtime_dlls)
+        if(EXISTS "${_vcpkg_prefix}/bin/${_dll}")
+            add_custom_command(TARGET ScytheHeaderTool POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${_vcpkg_prefix}/bin/${_dll}"
+                    $<TARGET_FILE_DIR:ScytheHeaderTool>
+                    COMMENT "\nCopying runtime DLL ${_dll} next to ScytheHeaderTool")
+        endif()
+    endforeach()
+endif()
