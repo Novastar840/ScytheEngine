@@ -223,9 +223,9 @@ target_link_libraries(ScytheHeaderTool PRIVATE
         clangBasic
 )
 
-# --- vcpkg dynamic-triplet runtime DLLs must sit next to the exe -------------
+# Copies necessary dlls next to the .exe
 if(WIN32 AND DEFINED _vcpkg_prefix)
-    set(_sht_runtime_dlls zstd.dll z.dll)   # from dumpbin /dependents; extend if it ever shows more
+    set(_sht_runtime_dlls zstd.dll z.dll)
     foreach(_dll IN LISTS _sht_runtime_dlls)
         if(EXISTS "${_vcpkg_prefix}/bin/${_dll}")
             add_custom_command(TARGET ScytheHeaderTool POST_BUILD
