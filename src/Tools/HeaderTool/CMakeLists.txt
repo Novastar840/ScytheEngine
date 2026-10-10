@@ -224,6 +224,8 @@ target_link_libraries(ScytheHeaderTool PRIVATE
         clangSerialization
         clangBasic
 )
+set(_scytheHeaderToolPCH "src/ScytheHeaderToolPCH.h")
+target_precompile_headers(ScytheHeaderTool PRIVATE ${_scytheHeaderToolPCH})
 
 # Copies necessary dlls next to the .exe
 if(WIN32 AND DEFINED _vcpkg_prefix)
