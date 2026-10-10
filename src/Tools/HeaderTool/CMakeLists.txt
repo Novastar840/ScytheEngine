@@ -209,11 +209,13 @@ if(SCYTHE_LLVM_EXPECTED_VERSION AND NOT LLVM_PACKAGE_VERSION VERSION_EQUAL SCYTH
             "AST API drift is possible; test before adopting a new LLVM release.")
 endif()
 
-add_executable(ScytheHeaderTool src/Main.cpp)
+file(GLOB_RECURSE HEADER_TOOL_SRC CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
+add_executable(ScytheHeaderTool ${HEADER_TOOL_SRC})
 
 target_include_directories(ScytheHeaderTool PRIVATE ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})
 target_compile_definitions(ScytheHeaderTool PRIVATE ${LLVM_DEFINITIONS} __SCYTHE_HEADER_TOOL__)
 target_compile_options(ScytheHeaderTool PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>)
+target_compile_options(ScytheHeaderTool PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/W0>)
 
 target_link_libraries(ScytheHeaderTool PRIVATE
         clangTooling
@@ -226,13 +228,86 @@ target_link_libraries(ScytheHeaderTool PRIVATE
 # Copies necessary dlls next to the .exe
 if(WIN32 AND DEFINED _vcpkg_prefix)
     set(_sht_runtime_dlls zstd.dll z.dll)
+    set(_sht_copied_dlls "")
     foreach(_dll IN LISTS _sht_runtime_dlls)
         if(EXISTS "${_vcpkg_prefix}/bin/${_dll}")
-            add_custom_command(TARGET ScytheHeaderTool POST_BUILD
+            # NOTE: OUTPUT may not contain generator expressions, hence the
+            # plain path. It equals $<TARGET_FILE_DIR:ScytheHeaderTool> here
+            # because no RUNTIME_OUTPUT_DIRECTORY is set for the target.
+            set(_dest "${CMAKE_CURRENT_BINARY_DIR}/${_dll}")
+            add_custom_command(
+                    OUTPUT  "${_dest}"
                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "${_vcpkg_prefix}/bin/${_dll}"
-                    $<TARGET_FILE_DIR:ScytheHeaderTool>
-                    COMMENT "\nCopying runtime DLL ${_dll} next to ScytheHeaderTool")
+                    "${_vcpkg_prefix}/bin/${_dll}" "${_dest}"
+                    DEPENDS "${_vcpkg_prefix}/bin/${_dll}"
+                    COMMENT "Copying runtime DLL ${_dll} next to ScytheHeaderTool.exe")
+            list(APPEND _sht_copied_dlls "${_dest}")
         endif()
     endforeach()
+    if(_sht_copied_dlls)
+        add_custom_target(ScytheHeaderToolRuntimeDLLs DEPENDS ${_sht_copied_dlls})
+        add_dependencies(ScytheHeaderTool ScytheHeaderToolRuntimeDLLs)
+    endif()
 endif()
+
+# --- Setup PCH command ---
+set(_engine_pch "${CMAKE_BINARY_DIR}/headerTool/SHT.pch")
+add_custom_command(
+        OUTPUT  "${_engine_pch}"
+        COMMAND ScytheHeaderTool --build-pch "${_engine_pch}"
+        "${CMAKE_SOURCE_DIR}/src/Scythe/ScytheEnginePCH.h"
+        DEPENDS ScytheHeaderTool
+        "${CMAKE_SOURCE_DIR}/src/Scythe/ScytheEnginePCH.h"
+        "${CMAKE_SOURCE_DIR}/src/Scythe/Reflection/ReflectionMacros.h"
+        "${CMAKE_BINARY_DIR}/compile_commands.json"
+        COMMENT "[SHT] Generated PCH at ${_engine_pch}"
+        VERBATIM)
+add_custom_target(PCHBuildCommand DEPENDS "${_engine_pch}")
+
+# --- Header tool file discovery, custom command setup and trigger ---
+set(HEADER_TOOL_SCAN_DIRS
+        "${CMAKE_SOURCE_DIR}/src/Scythe"
+        "${CMAKE_SOURCE_DIR}/src/Tools/HeaderTool/tests/Fixtures"
+        CACHE STRING "Directories scanned for reflected headers")
+
+set(_candidate_headers "")
+foreach(_dir IN LISTS HEADER_TOOL_SCAN_DIRS)
+    file(GLOB_RECURSE _dir_headers CONFIGURE_DEPENDS "${_dir}/*.h" "${_dir}/*.hpp")
+    list(APPEND _candidate_headers ${_dir_headers})
+endforeach()
+list(REMOVE_DUPLICATES _candidate_headers)
+list(FILTER _candidate_headers EXCLUDE REGEX "Core/Reflection\\.h$") # temporary, this is the old reflection system
+list(FILTER _candidate_headers EXCLUDE REGEX "Reflection/ReflectionMacros\\.h$")
+list(FILTER _candidate_headers EXCLUDE REGEX "ScytheEnginePCH\\.h$")
+
+set(_stamp_dir "${CMAKE_BINARY_DIR}/headerTool/stamps")
+file(MAKE_DIRECTORY "${_stamp_dir}")
+
+# Prime dependencies. If any of these change, full redo of all generated files
+set(_prime_deps 
+        "${CMAKE_SOURCE_DIR}/src/Scythe/Reflection/ReflectionMacros.h"
+        ScytheHeaderTool
+        PCHBuildCommand
+)
+
+set(_stamps "")
+foreach(_header IN LISTS _candidate_headers)
+    file(RELATIVE_PATH _rel "${CMAKE_SOURCE_DIR}" "${_header}")
+    get_filename_component(_name "${_header}" NAME)
+    set(_stamp "${_stamp_dir}/${_name}.stamp")
+
+    add_custom_command(
+            OUTPUT  "${_stamp}"
+            COMMAND ScytheHeaderTool "${_header}"
+            COMMAND ${CMAKE_COMMAND} -E touch "${_stamp}"
+            DEPENDS "${_header}" "${_prime_deps}"
+            COMMENT "[SHT] Compiled ${_rel}"
+            VERBATIM)
+    list(APPEND _stamps "${_stamp}")
+endforeach()
+
+add_custom_target(HeaderToolTrigger DEPENDS ${_stamps})
+
+target_compile_definitions(ScytheHeaderTool PRIVATE
+        "SCYTHE_COMPILE_COMMANDS=\"${CMAKE_BINARY_DIR}/compile_commands.json\""
+        "SCYTHE_HEADER_TOOL_PCH=\"${_engine_pch}\"")

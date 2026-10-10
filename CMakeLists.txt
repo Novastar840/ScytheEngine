@@ -89,7 +89,7 @@ add_custom_target(CopyAssets ALL
         "$<TARGET_FILE_DIR:EngineApp>/assets"
         COMMENT "Copying assets to build directory"
 )
-add_dependencies(EngineApp CopyAssets)
+add_dependencies(EngineApp CopyAssets HeaderToolTrigger)
 
 # ==========================================
 # CATCH2 UNIT TESTING SETUP

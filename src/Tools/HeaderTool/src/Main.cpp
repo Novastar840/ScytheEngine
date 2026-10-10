@@ -3,85 +3,15 @@
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendAction.h"
-#include "clang/Tooling/CommonOptionsParser.h"
 #include "clang/Tooling/Tooling.h"
+#include "clang/Tooling/JSONCompilationDatabase.h"
+#include "clang/Frontend/FrontendActions.h"
+#include "Utils.h"
 
 using namespace clang;
 
 namespace Scythe
 {
-    std::string FindRepoRoot()
-    {
-        if (const char* Env = std::getenv("SCYTHE_REPO_ROOT"))
-            if (llvm::sys::fs::exists(Env))
-                return Env;
-        
-        llvm::SmallString<256> Dir(llvm::sys::fs::getMainExecutable(nullptr, nullptr));
-        llvm::sys::path::remove_filename(Dir);
-
-        while (true)
-        {
-            llvm::SmallString<256> Sentinel(Dir);
-            llvm::sys::path::append(Sentinel, "src", "Scythe", "Main.cpp");
-            if (llvm::sys::fs::exists(Sentinel))
-                return std::string(Dir.str());
-
-            llvm::SmallString<256> Parent(Dir);
-            llvm::sys::path::remove_filename(Parent);   // one level up
-            if (Parent == Dir)
-                break;                                  // reached filesystem root
-            Dir = Parent;
-        }
-        return {};
-    }
-    
-    // Finds SCYTHE macro markers and returns the macro arguments
-    std::optional<std::string> FindMarkerAbove(ASTContext& context, const Decl* decl, llvm::StringRef markerName)
-    {
-        const SourceManager& sourceManager = context.getSourceManager();
-        const SourceLocation location = sourceManager.getSpellingLoc(decl->getLocation());
-        if (!sourceManager.isInMainFile(location))
-            return std::nullopt;
-        
-        const StringRef text = sourceManager.getBufferData(sourceManager.getFileID(location));
-        
-        const unsigned offset = sourceManager.getFileOffset(location);
-        size_t lineStart = text.rfind('\n', offset);
-        lineStart = (lineStart == StringRef::npos) ? 0 : lineStart + 1;
-        
-        size_t cursor = lineStart;
-        while (true)
-        {
-            if (cursor == 0) break;
-            
-            const size_t prevEnd = cursor - 1;
-            size_t prevStart = 0;
-            if (prevEnd > 0)
-            {
-                const size_t p = text.rfind('\n', prevEnd - 1);
-                prevStart = (p == StringRef::npos) ? 0 : p + 1;
-            }
-            const StringRef line = text.slice(prevStart, prevEnd).trim(" \t\r");
-            cursor = prevStart;
-            
-            if (line.empty() || line.starts_with("//"))
-                continue;
-            
-            if (line.size() < markerName.size() || !line.starts_with(markerName) || line[markerName.size()] != '(')
-                break;
-            
-            const size_t open = line.find('(');
-            const size_t close = line.rfind(')');
-            if (close == StringRef::npos || close < open)
-            {
-                llvm::errs() << "error: malformed " << markerName << " marker: " << line << "\n";
-                return std::nullopt;
-            }
-            return std::string(line.slice(open + 1, close).trim(" \t"));
-        }
-        return std::nullopt;
-    }
-    
     class ReflectionVisitor : public RecursiveASTVisitor<ReflectionVisitor>
     {
     public:
@@ -91,7 +21,7 @@ namespace Scythe
         {
             if (!IsInMainFile(decl)) return true;
             if (!decl->isCompleteDefinition()) return true; // skip forward declarations
-            
+
             if (auto Args = FindMarkerAbove(m_Ctx, decl, "SCYTHE_CLASS"))
                 llvm::outs() << "SCYTHE_CLASS(" << *Args << ")\n";
             llvm::outs() << "class: " << decl->getQualifiedNameAsString() << "\n";
@@ -101,7 +31,7 @@ namespace Scythe
         bool VisitFieldDecl(FieldDecl* decl)
         {
             if (!IsInMainFile(decl)) return true;
-            
+
             if (auto Args = FindMarkerAbove(m_Ctx, decl, "SCYTHE_PROPERTY"))
                 llvm::outs() << "   SCYTHE_PROPERTY(" << *Args << ")\n";
             llvm::outs() << "   field: " << decl->getNameAsString()
@@ -136,33 +66,97 @@ namespace Scythe
             return std::make_unique<ReflectionConsumer>();
         }
     };
+    
+    class ScythePCHAction : public GeneratePCHAction
+    {
+    public:
+        explicit ScythePCHAction(std::string out) : m_Out(std::move(out)) {}
+    protected:
+        bool BeginSourceFileAction(CompilerInstance& CI) override
+        {
+            CI.getFrontendOpts().OutputFile = m_Out;   // before base reads it
+            return GeneratePCHAction::BeginSourceFileAction(CI);
+        }
+    private:
+        std::string m_Out;
+    };
+    
+    class ScythePCHActionFactory : public tooling::FrontendActionFactory
+    {
+    public:
+        explicit ScythePCHActionFactory(std::string out) : m_Out(std::move(out)) {}
+
+        std::unique_ptr<FrontendAction> create() override
+        {
+            return std::make_unique<ScythePCHAction>(m_Out);
+        }
+
+    private:
+        std::string m_Out;
+    };
 }
 
-int main()
+int main(int argc, const char** argv)
 {
     const std::string repoRoot = Scythe::FindRepoRoot();
     if (repoRoot.empty())
     {
-        llvm::errs() << "error: ScytheEngine repo root not found above the executable.\n"
+        llvm::errs() << "[SHT] error: ScytheEngine repo root not found above the executable.\n"
                      << "        Set SCYTHE_REPO_ROOT or run the tool from a checkout.\n";
         return 1;
     }
+
+    const std::string compileCommandsPath = Scythe::FindCompileCommands(repoRoot);
+    const std::string preludeHeader = repoRoot + "/src/Scythe/ScytheEnginePCH.h";
+    const std::string preludePch    = Scythe::GetCompiledPCHPath(repoRoot);
+
+    // --- PCH production ---
+    // ScytheHeaderTool --build-pch <out.pch> <PCH.h>
+    if (argc > 3 && std::string(argv[1]) == "--build-pch")
+    {
+        const std::string out    = argv[2];
+        const std::string header = argv[3];
+        
+        auto flags = Scythe::BuildFlagsFromCompileCommands(
+            compileCommandsPath, Scythe::PCHMode::None, preludeHeader, preludePch);
+        if (!flags)
+            flags = std::vector<std::string>{
+                "--driver-mode=cl", "/TP", "/std:c++20",
+                "/D__SCYTHE_HEADER_TOOL__",
+                "-Wno-pragma-once-outside-header" };
+
+        tooling::FixedCompilationDatabase db(repoRoot, *flags);
+        tooling::ClangTool tool(db, { header });
+        Scythe::ScythePCHActionFactory factory(out);
+        return tool.run(&factory);
+    }
     
-    const std::vector<std::string> headers = {
-        repoRoot + "/src/Tools/HeaderTool/tests/Fixtures/SampleComponent.h",
-    };
-    
-    const std::vector<std::string> clangArgs = {
-        "-x", "c++",                       // .h is ambiguous: declare the language explicitly
-        "-std=c++20",
-        "-I" + repoRoot + "/src/Scythe",
-        "-D__SCYTHE_HEADER_TOOL__",          // macro header's tool branch
-        "-Wno-pragma-once-outside-header",   // parsing a .h as a TU is intentional
-    };
-    
-    tooling::FixedCompilationDatabase compilations(repoRoot, clangArgs);
-    tooling::ClangTool tool(compilations, headers);
-    
+    std::vector<std::string> headers;
+    if (argc > 1)
+        headers.assign(argv + 1, argv + argc);
+    else
+        headers = { repoRoot + "/src/Tools/HeaderTool/tests/Fixtures/SampleComponent.h" };
+
+    std::vector<std::string> marked;
+    for (const auto& h : headers)
+        if (Scythe::HasAnyMarker(h)) marked.push_back(h);
+    if (marked.empty())
+        return 0;
+
+    const bool havePch = !preludePch.empty() && llvm::sys::fs::exists(preludePch);
+    auto flags = Scythe::BuildFlagsFromCompileCommands(
+        compileCommandsPath,
+        havePch ? Scythe::PCHMode::UsePch : Scythe::PCHMode::ForceInclude,
+        preludeHeader, preludePch);
+    if (!flags)
+        flags = std::vector<std::string>{
+            "--driver-mode=cl", "/TP", "/std:c++20",
+            "/I" + repoRoot + "/src/Scythe",
+            "/D__SCYTHE_HEADER_TOOL__",
+            "-Wno-pragma-once-outside-header",
+            "/FI" + preludeHeader };
+
+    tooling::FixedCompilationDatabase compilations(repoRoot, *flags);
+    tooling::ClangTool tool(compilations, marked);
     return tool.run(tooling::newFrontendActionFactory<Scythe::ReflectionAction>().get());
 }
-
