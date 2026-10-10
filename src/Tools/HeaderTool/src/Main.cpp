@@ -99,8 +99,8 @@ int main(int argc, const char** argv)
     }
 
     const std::string compileCommandsPath = Scythe::FindCompileCommands(repoRoot);
-    const std::string preludeHeader = repoRoot + "/src/Scythe/ScytheEnginePCH.h";
-    const std::string preludePch    = Scythe::GetCompiledPCHPath(repoRoot);
+    const std::string pchHeader = repoRoot + "/src/Scythe/ScytheEnginePCH.h";
+    const std::string Pch       = Scythe::GetCompiledPCHPath(repoRoot);
 
     // --- PCH production ---
     // ScytheHeaderTool --build-pch <out.pch> <PCH.h>
@@ -110,7 +110,7 @@ int main(int argc, const char** argv)
         const std::string header = argv[3];
         
         auto flags = Scythe::BuildFlagsFromCompileCommands(
-            compileCommandsPath, Scythe::PCHMode::None, preludeHeader, preludePch);
+            compileCommandsPath, Scythe::PCHMode::None, pchHeader, Pch);
         if (!flags)
             flags = std::vector<std::string>{
                 "--driver-mode=cl", "/TP", "/std:c++20",
@@ -135,18 +135,18 @@ int main(int argc, const char** argv)
     if (marked.empty())
         return 0;
 
-    const bool havePch = !preludePch.empty() && llvm::sys::fs::exists(preludePch);
+    const bool havePch = !Pch.empty() && llvm::sys::fs::exists(Pch);
     auto flags = Scythe::BuildFlagsFromCompileCommands(
         compileCommandsPath,
         havePch ? Scythe::PCHMode::UsePch : Scythe::PCHMode::ForceInclude,
-        preludeHeader, preludePch);
+        pchHeader, Pch);
     if (!flags)
         flags = std::vector<std::string>{
             "--driver-mode=cl", "/TP", "/std:c++20",
             "/I" + repoRoot + "/src/Scythe",
             "/D__SCYTHE_HEADER_TOOL__",
             "-Wno-pragma-once-outside-header",
-            "/FI" + preludeHeader };
+            "/FI" + pchHeader };
 
     tooling::FixedCompilationDatabase compilations(repoRoot, *flags);
     tooling::ClangTool tool(compilations, marked);
