@@ -21,6 +21,14 @@ namespace Scythe
         spdlog::info("Timer [{}]: {:.5f} ms", label, ms);
         return ms;
     }
+
+    enum TimingGuarPrintFormat : int8_t
+    {
+        milliSeconds,
+        seconds,
+        minutes,
+        hours
+    };
     
     // Measures how long a span of work takes and logs the elapsed time.
     class TimingGuard
@@ -44,11 +52,22 @@ namespace Scythe
             m_Start = std::chrono::steady_clock::now();
         }
         
-        void PrintTime()
+        void PrintTime(TimingGuarPrintFormat format = milliSeconds)
         {
             const auto end = std::chrono::steady_clock::now();
-            const double ms = std::chrono::duration<double, std::milli>(end - m_Start).count();
-            spdlog::info("Timer [{}]: {:.5f} ms", m_Label, ms);
+            const double time = std::chrono::duration<double, std::milli>(end - m_Start).count();
+
+            const auto [scaled, unit] = [&]() -> std::pair<double, std::string_view> {
+                switch (format)
+                {
+                case TimingGuarPrintFormat::hours:   return {time / (60. * 60. * 1000.), "hours"};
+                case TimingGuarPrintFormat::minutes: return {time / (60. * 1000.),       "minutes"};
+                case TimingGuarPrintFormat::seconds: return {time / 1000.,               "seconds"};
+                default:                             return {time,                       "ms"};
+                }
+            }();
+
+            spdlog::info("Timer [{}]: {:.5f} {}", m_Label, scaled, unit);
         }
         
         double GetTime() const
@@ -69,9 +88,15 @@ namespace Scythe
             SetNow();
         }
         
-        void PrintAndSetNow(std::string_view label)
+        void PrintAndSetNow(TimingGuarPrintFormat format)
         {
-            PrintTime();
+            PrintTime(format);
+            SetNow();
+        }
+        
+        void PrintAndSetNow(std::string_view label, TimingGuarPrintFormat format = milliSeconds)
+        {
+            PrintTime(format);
             SetNow(label);
         }
         
