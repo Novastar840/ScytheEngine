@@ -12,6 +12,7 @@
 #include "Core/RendererAPI.h"
 #include "Core/Shader.h"
 #include "Core/SubsystemManager.h"
+#include "Core/Timers.h"
 
 using namespace Scythe;
 
@@ -35,6 +36,9 @@ int main()
 {
 	try
 	{
+		TimingGuard* startupTimer = new TimingGuard("Startup time");
+		startupTimer->SetNow();
+		
 		std::unique_ptr<SubsystemManager> subsystemManager = std::make_unique<SubsystemManager>();
 		subsystemManager->RegisterAllFromRegistry();
 		subsystemManager->InitializeAll();
@@ -71,7 +75,10 @@ int main()
 
 		float lastFrame = 0.0;
 		float bunnyYaw = 0.0f;
-
+		
+		startupTimer->PrintTime(TimingGuarPrintFormat::seconds);
+		delete startupTimer;
+		
 		while (!window->ShouldClose())
 		{
 			float currentFrame = window->GetTime();
