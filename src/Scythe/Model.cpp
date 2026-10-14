@@ -67,6 +67,9 @@ namespace Scythe
         std::vector<unsigned int> indices;
         std::vector<Texture> textures;
         
+        vertices.reserve(mesh->mNumVertices);
+        indices.reserve(mesh->mNumFaces * 3);
+        
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
             Vertex vertex;
