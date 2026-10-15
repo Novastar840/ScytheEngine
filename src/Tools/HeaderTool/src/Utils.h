@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Scythe
+namespace Scythe::HeaderTool
 {
     inline std::string FindRepoRoot()
     {

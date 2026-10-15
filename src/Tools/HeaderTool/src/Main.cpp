@@ -14,7 +14,7 @@ namespace Scythe
             if (!IsInMainFile(decl)) return true;
             if (!decl->isCompleteDefinition()) return true; // skip forward declarations
 
-            if (auto Args = FindMarkerAbove(m_Ctx, decl, "SCYTHE_CLASS"))
+            if (auto Args = HeaderTool::FindMarkerAbove(m_Ctx, decl, "SCYTHE_CLASS"))
                 llvm::outs() << "SCYTHE_CLASS(" << *Args << ")\n";
             llvm::outs() << "class: " << decl->getQualifiedNameAsString() << "\n";
             return true;
@@ -24,7 +24,7 @@ namespace Scythe
         {
             if (!IsInMainFile(decl)) return true;
 
-            if (auto Args = FindMarkerAbove(m_Ctx, decl, "SCYTHE_PROPERTY"))
+            if (auto Args = HeaderTool::FindMarkerAbove(m_Ctx, decl, "SCYTHE_PROPERTY"))
                 llvm::outs() << "   SCYTHE_PROPERTY(" << *Args << ")\n";
             llvm::outs() << "   field: " << decl->getNameAsString()
                 << " : " << decl->getType().getAsString() << "\n";
@@ -90,7 +90,9 @@ namespace Scythe
 
 int main(int argc, const char** argv)
 {
-    const std::string repoRoot = Scythe::FindRepoRoot();
+    using namespace Scythe::HeaderTool;
+    
+    const std::string repoRoot = FindRepoRoot();
     if (repoRoot.empty())
     {
         llvm::errs() << "[SHT] error: ScytheEngine repo root not found above the executable.\n"
@@ -98,9 +100,9 @@ int main(int argc, const char** argv)
         return 1;
     }
 
-    const std::string compileCommandsPath = Scythe::FindCompileCommands(repoRoot);
+    const std::string compileCommandsPath = FindCompileCommands(repoRoot);
     const std::string pchHeader = repoRoot + "/src/Scythe/ScytheEnginePCH.h";
-    const std::string Pch       = Scythe::GetCompiledPCHPath(repoRoot);
+    const std::string Pch       = GetCompiledPCHPath(repoRoot);
 
     // --- PCH production ---
     // ScytheHeaderTool --build-pch <out.pch> <PCH.h>
@@ -109,8 +111,8 @@ int main(int argc, const char** argv)
         const std::string out    = argv[2];
         const std::string header = argv[3];
         
-        auto flags = Scythe::BuildFlagsFromCompileCommands(
-            compileCommandsPath, Scythe::PCHMode::None, pchHeader, Pch);
+        auto flags = BuildFlagsFromCompileCommands(
+            compileCommandsPath, PCHMode::None, pchHeader, Pch);
         if (!flags)
             flags = std::vector<std::string>{
                 "--driver-mode=cl", "/TP", "/std:c++20",
@@ -131,14 +133,14 @@ int main(int argc, const char** argv)
 
     std::vector<std::string> marked;
     for (const auto& h : headers)
-        if (Scythe::HasAnyMarker(h)) marked.push_back(h);
+        if (HasAnyMarker(h)) marked.push_back(h);
     if (marked.empty())
         return 0;
 
     const bool havePch = !Pch.empty() && llvm::sys::fs::exists(Pch);
-    auto flags = Scythe::BuildFlagsFromCompileCommands(
+    auto flags = Scythe::HeaderTool::BuildFlagsFromCompileCommands(
         compileCommandsPath,
-        havePch ? Scythe::PCHMode::UsePch : Scythe::PCHMode::ForceInclude,
+        havePch ? PCHMode::UsePch : PCHMode::ForceInclude,
         pchHeader, Pch);
     if (!flags)
         flags = std::vector<std::string>{
