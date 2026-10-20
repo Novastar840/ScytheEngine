@@ -281,6 +281,7 @@ list(REMOVE_DUPLICATES _candidate_headers)
 list(FILTER _candidate_headers EXCLUDE REGEX "Core/Reflection\\.h$") # temporary, this is the old reflection system
 list(FILTER _candidate_headers EXCLUDE REGEX "Reflection/ReflectionMacros\\.h$")
 list(FILTER _candidate_headers EXCLUDE REGEX "ScytheEnginePCH\\.h$")
+list(FILTER _candidate_headers EXCLUDE REGEX "HeaderTool/tests/Fixtures/.*")
 
 set(_stamp_dir "${CMAKE_BINARY_DIR}/headerTool/stamps")
 file(MAKE_DIRECTORY "${_stamp_dir}")
