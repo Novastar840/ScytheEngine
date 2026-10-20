@@ -133,8 +133,9 @@ namespace Scythe::HeaderTool
             // clang-cl mode. Every element of this vector is ONE argv entry.
             std::vector<std::string> args;
             args.push_back("--driver-mode=cl");
-            args.push_back("/TP");                          // treat inputs (.h) as C++
+            args.push_back("/TP"); // treat inputs (.h) as C++
             args.push_back("/std:c++20");
+            args.push_back("/EHsc"); // sources use throw; clang-cl errors without it
             args.push_back("/D__SCYTHE_HEADER_TOOL__");
             args.push_back("-Wno-pragma-once-outside-header");
 
@@ -217,5 +218,57 @@ namespace Scythe::HeaderTool
         }
         llvm::errs() << "[SHT] no SHT.pch found in cmake-build-release/ or cmake-build-debug/\n";
         return {};
+    }
+    
+    // Converts an absolute source-file path to a repo-relative, slash-normalized
+    // one. Model output must never embed machine-specific absolute paths
+    // (design doc §12: deterministic output across machines/CI).
+    inline std::string MakeRepoRelative(std::string absolute, std::string repoRoot)
+    {
+        llvm::sys::path::convert_to_slash(absolute);                                                                                                                                                                                                                    
+        llvm::sys::path::convert_to_slash(repoRoot);                                                                                                                                                                                                                    
+        while (repoRoot.size() > 1 && repoRoot.ends_with('/'))
+            repoRoot.pop_back();                                                                                                                                                                                                                                        
+                                                                                                                                                                                                                                                                      
+        const llvm::StringRef path(absolute); 
+
+        if (path.size() >= repoRoot.size() && path.take_front(repoRoot.size()).equals_insensitive(repoRoot))
+            return std::string(path.drop_front(repoRoot.size()).ltrim('/'));
+
+        return std::string(path); // outside the repo: keep as-is
+    }
+    
+    inline std::map<std::string, std::string> ParseKeyValueArgs(const std::string& args)
+    {
+        std::map<std::string, std::string> out;
+        std::string key, value;
+        bool inQuotes = false;
+        bool hasKey = false;
+        
+        auto trim = [](std::string string) -> std::string
+        {
+            constexpr const char* ws = " \t\r\n";
+            string.erase(0, string.find_first_not_of(ws));
+            string.erase(string.find_last_not_of(ws) + 1);
+            return string;
+        };
+        auto saveAndFlush = [&]
+        {
+            if (!key.empty() || !value.empty())
+                out[trim(key)] = trim(value);
+            key.clear();
+            value.clear();
+            hasKey = false;
+        };
+        
+        for (const char c : args)
+        {
+            if (c == '"') { inQuotes = !inQuotes; continue;}
+            if (c == ',' && !inQuotes) { saveAndFlush(); continue;}
+            if (c == '=' && !inQuotes && !hasKey) { hasKey = true; continue; }
+            (hasKey ? value : key).push_back(c);
+        }
+        saveAndFlush();
+        return out;
     }
 }
