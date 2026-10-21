@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace Scythe
+namespace Scythe::HeaderTool
 {
     struct PropertyInfo
     {

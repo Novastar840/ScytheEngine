@@ -7,7 +7,7 @@ namespace Scythe
 {
     struct VisitorContext
     {
-        ReflectionModel reflectionModel;
+        HeaderTool::ReflectionModel reflectionModel;
         std::string repoRoot;
     };    
     
@@ -34,8 +34,8 @@ namespace Scythe
                 }
                 return true;
             }
-            
-            ClassInfo info {
+
+            HeaderTool::ClassInfo info {
                 .name = decl->getNameAsString(),
                 .namespaceQualifiedName = decl->getQualifiedNameAsString(),
                 .headerPath = GetRepoRelativePath(decl),
@@ -56,7 +56,7 @@ namespace Scythe
         }
 
     private:
-        void ExtractBase(const CXXRecordDecl* decl, ClassInfo& info) const
+        void ExtractBase(const CXXRecordDecl* decl, HeaderTool::ClassInfo& info) const
         {
             for (const auto& base : decl->bases())
             {
@@ -86,14 +86,14 @@ namespace Scythe
             }
         }
         
-        void ExtractProperties(const CXXRecordDecl* decl, ClassInfo& info) const
+        void ExtractProperties(const CXXRecordDecl* decl, HeaderTool::ClassInfo& info) const
         {
             for (const auto& field : decl->fields())
             {
                 const auto args = HeaderTool::FindMarkerAbove(m_Ctx, field, "SCYTHE_PROPERTY");
                 if (args == std::nullopt) continue;
-                
-                PropertyInfo pInfo{
+
+                HeaderTool::PropertyInfo pInfo{
                     .name = field->getNameAsString(),
                     .cppType = field->getType().getAsString(GetPrintingPolicy()),
                     .metaData = HeaderTool::ParseKeyValueArgs(*args), 
@@ -173,7 +173,7 @@ namespace Scythe
         }
         
         ASTContext& m_Ctx;
-        ReflectionModel& m_ReflectionModel;
+        HeaderTool::ReflectionModel& m_ReflectionModel;
         std::string m_RepoRoot;
     };
 
