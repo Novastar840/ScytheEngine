@@ -197,6 +197,7 @@ namespace Scythe
     protected:
         std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance& compilerInstance, StringRef File) override
         {
+            compilerInstance.getFrontendOpts().SkipFunctionBodies = true;
             return std::make_unique<ReflectionConsumer>(m_VisitorContext);
         }
     private:
@@ -206,20 +207,20 @@ namespace Scythe
     class ScythePCHAction : public GeneratePCHAction
     {
     public:
-        explicit ScythePCHAction(std::string out) : m_Out(std::move(out)) {}
+        explicit ScythePCHAction(const std::string& out) : m_Out(out) {}
         bool BeginSourceFileAction(CompilerInstance& CI) override
         {
-            CI.getFrontendOpts().OutputFile = m_Out;   // before base reads it
+            CI.getFrontendOpts().OutputFile = m_Out;
             return GeneratePCHAction::BeginSourceFileAction(CI);
         }
     private:
-        std::string m_Out;
+        const std::string& m_Out;
     };
     
     class ScythePCHActionFactory : public tooling::FrontendActionFactory
     {
     public:
-        explicit ScythePCHActionFactory(std::string out) : m_Out(std::move(out)) {}
+        explicit ScythePCHActionFactory(const std::string& out) : m_Out(out) {}
 
         std::unique_ptr<FrontendAction> create() override
         {
@@ -227,7 +228,7 @@ namespace Scythe
         }
 
     private:
-        std::string m_Out;
+        const std::string& m_Out;
     };
     
     class ReflectionActionFactory : public tooling::FrontendActionFactory
