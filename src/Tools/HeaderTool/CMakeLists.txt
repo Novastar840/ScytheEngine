@@ -30,10 +30,10 @@ endfunction()
 set(SCYTHE_SKIP_VCPKG OFF)
 if(SCYTHE_LLVM_ROOT)
     list(APPEND CMAKE_PREFIX_PATH "${SCYTHE_LLVM_ROOT}")
-    message(STATUS "[SHT] Manual LLVM root: ${SCYTHE_LLVM_ROOT} (vcpkg checks skipped)")
+    sht_info("[SHT] Manual LLVM root: ${SCYTHE_LLVM_ROOT} (vcpkg checks skipped)")
     set(SCYTHE_SKIP_VCPKG ON)
 elseif(DEFINED LLVM_DIR AND DEFINED Clang_DIR)
-    message(STATUS "[SHT] LLVM_DIR/Clang_DIR supplied manually (vcpkg checks skipped)")
+    sht_info("[SHT] LLVM_DIR/Clang_DIR supplied manually (vcpkg checks skipped)")
     set(SCYTHE_SKIP_VCPKG ON)
 endif()
 
@@ -90,7 +90,7 @@ if(NOT SCYTHE_SKIP_VCPKG)
             set(SCYTHE_VCPKG_ROOT "$ENV{VCPKG_ROOT}")
             set(_via "VCPKG_ROOT env")
         else()
-            message(STATUS "[SHT] Ignoring VCPKG_ROOT env '$ENV{VCPKG_ROOT}' (VS-bundled or invalid)")
+            sht_info("[SHT] Ignoring VCPKG_ROOT env '$ENV{VCPKG_ROOT}' (VS-bundled or invalid)")
         endif()
     endif()
 
@@ -127,7 +127,7 @@ if(NOT SCYTHE_SKIP_VCPKG)
         endif()
     endif()
 
-    message(STATUS "[SHT] vcpkg detected at: ${SCYTHE_VCPKG_ROOT} (via ${_via})")
+    sht_info("[SHT] vcpkg detected at: ${SCYTHE_VCPKG_ROOT} (via ${_via})")
 
     # --- Step 2: bootstrapped? --------------------------------------------------
     if(WIN32 AND NOT EXISTS "${SCYTHE_VCPKG_ROOT}/vcpkg.exe")
@@ -201,7 +201,7 @@ endif() # NOT SCYTHE_SKIP_VCPKG
 
 find_package(LLVM REQUIRED CONFIG)
 find_package(Clang REQUIRED CONFIG)
-message(STATUS "[SHT] LLVM ${LLVM_PACKAGE_VERSION} resolved via ${LLVM_DIR}")
+sht_info("[SHT] LLVM ${LLVM_PACKAGE_VERSION} resolved via ${LLVM_DIR}")
 
 if(SCYTHE_LLVM_EXPECTED_VERSION AND NOT LLVM_PACKAGE_VERSION VERSION_EQUAL SCYTHE_LLVM_EXPECTED_VERSION)
     message(WARNING
@@ -209,7 +209,7 @@ if(SCYTHE_LLVM_EXPECTED_VERSION AND NOT LLVM_PACKAGE_VERSION VERSION_EQUAL SCYTH
             "AST API drift is possible; test before adopting a new LLVM release.")
 endif()
 
-file(GLOB_RECURSE HEADER_TOOL_SRC CONFIGURE_DEPENDS "src/*.cpp" "src/*.h")
+file(GLOB_RECURSE HEADER_TOOL_SRC CONFIGURE_DEPENDS "src/*.cpp" "src/*.h" "tests/Fixtures/SampleComponent.h")
 add_executable(ScytheHeaderTool ${HEADER_TOOL_SRC})
 
 target_include_directories(ScytheHeaderTool PRIVATE ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})
@@ -253,15 +253,24 @@ if(WIN32 AND DEFINED _vcpkg_prefix)
 endif()
 
 # --- Setup PCH command ---
+
+# modification time changes only when the flags CONTENT changes.
+set(_cc_stable "${CMAKE_BINARY_DIR}/headerTool/compile_commands.stable.json")
+add_custom_command(
+        OUTPUT  "${_cc_stable}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/compile_commands.json" "${_cc_stable}"
+        DEPENDS "${CMAKE_BINARY_DIR}/compile_commands.json")
+
 set(_engine_pch "${CMAKE_BINARY_DIR}/headerTool/SHT.pch")
 add_custom_command(
         OUTPUT  "${_engine_pch}"
         COMMAND ScytheHeaderTool --build-pch "${_engine_pch}"
         "${CMAKE_SOURCE_DIR}/src/Scythe/ScytheEnginePCH.h"
-        DEPENDS ScytheHeaderTool
+        DEPENDS
         "${CMAKE_SOURCE_DIR}/src/Scythe/ScytheEnginePCH.h"
         "${CMAKE_SOURCE_DIR}/src/Scythe/Reflection/ReflectionMacros.h"
-        "${CMAKE_BINARY_DIR}/compile_commands.json"
+        ${_cc_stable}
         COMMENT "[SHT] Generated PCH at ${_engine_pch}"
         VERBATIM)
 add_custom_target(PCHBuildCommand DEPENDS "${_engine_pch}")
@@ -283,8 +292,46 @@ list(FILTER _candidate_headers EXCLUDE REGEX "Reflection/ReflectionMacros\\.h$")
 list(FILTER _candidate_headers EXCLUDE REGEX "ScytheEnginePCH\\.h$")
 list(FILTER _candidate_headers EXCLUDE REGEX "HeaderTool/tests/Fixtures/.*")
 
-set(_stamp_dir "${CMAKE_BINARY_DIR}/headerTool/stamps")
-file(MAKE_DIRECTORY "${_stamp_dir}")
+set(_manifest   "${CMAKE_BINARY_DIR}/headerTool/marked_headers.cmake")
+set(_candidates_file "${CMAKE_BINARY_DIR}/headerTool/candidates.cmake")
+
+# Candidates list for the build-time scanner (rewritten each configure;
+# changes here coincide with glob changes, which reconfigure anyway).
+set(_list "set(SCYTHE_CANDIDATE_HEADERS\n")
+foreach(_h IN LISTS _candidate_headers)
+    string(APPEND _list "  \"${_h}\"\n")
+endforeach()
+string(APPEND _list ")\n")
+
+set(_old_list "")
+if(EXISTS "${_candidates_file}")
+    file(READ "${_candidates_file}" _old_list)
+endif()
+if(NOT _old_list STREQUAL _list)
+    file(WRITE "${_candidates_file}" "${_list}")
+endif()
+
+if(EXISTS "${_manifest}")
+    include("${_manifest}") # defines SCYTHE_MARKED_HEADERS
+else()
+    set(SCYTHE_MARKED_HEADERS "")
+endif()
+set(_marked_headers "${SCYTHE_MARKED_HEADERS}")
+
+add_custom_command(
+        OUTPUT  "${_manifest}"
+        COMMAND ${CMAKE_COMMAND}
+        "-DCAND=${_candidates_file}" "-DOUT=${_manifest}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ScanMarkers.cmake"
+        DEPENDS ${_candidate_headers}
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/ScanMarkers.cmake"
+        "${_candidates_file}"
+        COMMENT "[SHT] scanning for reflection markers"
+        VERBATIM)
+add_custom_target(ScytheMarkerScan DEPENDS "${_manifest}")
+
+# Reconfigure ONLY when the marked set actually changes (or first run).
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_manifest}")
 
 # Prime dependencies. If any of these change, full redo of all generated files
 set(_prime_deps 
@@ -293,23 +340,37 @@ set(_prime_deps
         PCHBuildCommand
 )
 
-set(_stamps "")
-foreach(_header IN LISTS _candidate_headers)
-    file(RELATIVE_PATH _rel "${CMAKE_SOURCE_DIR}" "${_header}")
-    get_filename_component(_name "${_header}" NAME)
-    set(_stamp "${_stamp_dir}/${_name}.stamp")
+set(_gen_dir "${CMAKE_BINARY_DIR}/generated")
+file(MAKE_DIRECTORY "${_gen_dir}")
 
+foreach(_header IN LISTS _marked_headers)
+    get_filename_component(_stem "${_header}" NAME_WE)
+    set(_gen_h   "${_gen_dir}/${_stem}.generated.h")
+    set(_gen_cpp "${_gen_dir}/${_stem}.gen.cpp")
     add_custom_command(
-            OUTPUT  "${_stamp}"
-            COMMAND ScytheHeaderTool "${_header}"
-            COMMAND ${CMAKE_COMMAND} -E touch "${_stamp}"
-            DEPENDS "${_header}" "${_prime_deps}"
-            COMMENT "[SHT] Compiled ${_rel}"
+            OUTPUT  "${_gen_h}" "${_gen_cpp}"
+            COMMAND ScytheHeaderTool "${_header}" --emit "${_gen_dir}"
+            DEPENDS "${_header}" ${_prime_deps}
+            COMMENT "[SHT] Generated reflection for ${_header}"
             VERBATIM)
-    list(APPEND _stamps "${_stamp}")
+    list(APPEND _gen_outputs "${_gen_h}" "${_gen_cpp}")
 endforeach()
+add_custom_target(HeaderToolTrigger DEPENDS ${_gen_outputs} ScytheMarkerScan)
 
-add_custom_target(HeaderToolTrigger DEPENDS ${_stamps})
+set(_marked_stems "")
+foreach(_h IN LISTS _marked_headers)
+    get_filename_component(_s "${_h}" NAME_WE)
+    list(APPEND _marked_stems "${_s}")
+endforeach()
+file(GLOB _stale "${_gen_dir}/*.generated.h" "${_gen_dir}/*.gen.cpp")
+foreach(_f IN LISTS _stale)
+    get_filename_component(_s "${_f}" NAME_WE)
+    if(NOT _s IN_LIST _marked_stems)
+        #message(VERBOSE "[SHT] removing orphaned generated file: ${_f}")
+        sht_info("[SHT] removing orphaned generated file: ${_f}" TRUE)
+        file(REMOVE "${_f}")
+    endif()
+endforeach()
 
 target_compile_definitions(ScytheHeaderTool PRIVATE
         "SCYTHE_COMPILE_COMMANDS=\"${CMAKE_BINARY_DIR}/compile_commands.json\""

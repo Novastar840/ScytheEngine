@@ -1,12 +1,14 @@
 ﻿#pragma once
-#include "Reflection/ReflectionMacros.h"
+#include "../../src/Scythe/Reflection/ReflectionMacros.h"
+
+#include "SampleComponent.generated.h"
 
 namespace Scythe
 {
     SCYTHE_CLASS(Category = "Test")
     class SampleComponent
     {
-        GENERATED_BODY()
+        GENERATED_BODY();
     public:
         SCYTHE_PROPERTY(Tooltip = "Move speed")
         float speed = 1.0f;

@@ -1,6 +1,28 @@
 cmake_minimum_required(VERSION 3.20)
 project(ScytheEngine LANGUAGES CXX C)
 
+set(CMAKE_POLICY_DEFAULT_CMP0175 OLD)
+
+# First configure in a build dir = verbose; every later reconfigure = quiet.
+if(EXISTS "${CMAKE_BINARY_DIR}/.scythe_configured_once")
+    set(SCYTHE_VERBOSE_CONFIGURE OFF)
+else()
+    set(SCYTHE_VERBOSE_CONFIGURE ON)
+endif()
+
+# Info-tier [SHT] chatter (vcpkg ladder, LLVM resolution): first configure only.
+# Discovery-tier messages (reflected count, orphan removals) stay plain
+# message(STATUS) so they always print, in the normal neutral colour.
+function(sht_info msg)
+    set(_always FALSE)
+    if(ARGC GREATER 1 AND ARGV1)
+        set(_always TRUE)
+    endif()
+    if(SCYTHE_VERBOSE_CONFIGURE OR _always)
+        message(STATUS "${msg}")
+    endif()
+endfunction()
+
 # Replace MSVC's default /W3 with /W4 to avoid D9025 warnings
 if(MSVC)
     string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -38,6 +60,10 @@ if(MSVC)
     target_compile_options(EngineApp PRIVATE /GR-)
 else()
     target_compile_options(EngineApp PRIVATE -fno-rtti)
+endif()
+
+if(NOT SCYTHE_VERBOSE_CONFIGURE)
+    set(CMAKE_MESSAGE_LOG_LEVEL NOTICE)
 endif()
 
 include(FetchContent)
@@ -136,3 +162,5 @@ list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(CTest)
 include(Catch)
 catch_discover_tests(ScytheTests)
+
+file(TOUCH "${CMAKE_BINARY_DIR}/.scythe_configured_once")

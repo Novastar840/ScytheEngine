@@ -1,3 +1,4 @@
+#include "CodeGenerator.h"
 #include "Utils.h"
 #include "ReflectionModel.h"
 
@@ -14,8 +15,8 @@ namespace Scythe
     class ReflectionVisitor : public RecursiveASTVisitor<ReflectionVisitor>
     {
     public:
-        explicit ReflectionVisitor(ASTContext& context, VisitorContext& vContext) 
-            : m_Ctx(context), m_ReflectionModel(vContext.reflectionModel), m_RepoRoot(vContext.repoRoot)  
+        explicit ReflectionVisitor(ASTContext& context, VisitorContext& vContext)
+            : m_Ctx(context), m_ReflectionModel(vContext.reflectionModel), m_RepoRoot(vContext.repoRoot)
         {}
         
         bool VisitCXXRecordDecl(CXXRecordDecl* decl)
@@ -29,7 +30,7 @@ namespace Scythe
             {
                 if (ClassBodyContains(decl, "SCYTHE_COMPONENT("))
                 {
-                    llvm::outs() << "[SHT] legacy marker, not reflected yet: " 
+                    llvm::outs() << "   [SHT] legacy marker, not reflected yet: " 
                                  << decl->getQualifiedNameAsString() << '\n';
                 }
                 return true;
@@ -184,7 +185,12 @@ namespace Scythe
         void HandleTranslationUnit(ASTContext& context) override
         {
             ReflectionVisitor visitor(context, m_VisitorContext);
-            visitor.TraverseDecl(context.getTranslationUnitDecl());
+            const SourceManager& sm = context.getSourceManager();
+            for (Decl* decl : context.getTranslationUnitDecl()->decls())
+            {
+                if (sm.isInMainFile(decl->getLocation()))
+                    visitor.TraverseDecl(decl);
+            }
         }
     private:
         VisitorContext& m_VisitorContext;
@@ -281,10 +287,19 @@ int main(int argc, const char** argv)
         return tool.run(&factory);
     }
     
+    std::string emitDir;
     std::vector<std::string> headers;
-    if (argc > 1)
-        headers.assign(argv + 1, argv + argc);
-    else
+    for (int i = 1; i < argc; i++)
+    {
+        if (std::string(argv[i]) == "--emit" && i + 1 < argc)
+        {
+            emitDir = argv[++i];
+            continue;
+        }
+        headers.emplace_back(argv[i]);
+    }
+    
+    if (headers.empty())
         headers = { repoRoot + "/src/Tools/HeaderTool/tests/Fixtures/SampleComponent.h" };
 
     std::vector<std::string> marked;
@@ -292,7 +307,7 @@ int main(int argc, const char** argv)
         if (HasAnyMarker(h)) marked.push_back(h);
     if (marked.empty())
         return 0;
-
+    
     const bool havePch = !Pch.empty() && llvm::sys::fs::exists(Pch);
     auto flags = BuildFlagsFromCompileCommands(
         compileCommandsPath,
@@ -308,11 +323,45 @@ int main(int argc, const char** argv)
 
     Scythe::VisitorContext visitorContext { .repoRoot = repoRoot };
     
+    auto mem = llvm::makeIntrusiveRefCnt<llvm::vfs::InMemoryFileSystem>();
+    for (const std::string& header: marked)
+    {
+        llvm::SmallString<256> file(llvm::sys::path::filename(header));
+        llvm::sys::path::replace_extension(file, ".generated.h");
+        llvm::SmallString<256> stub(emitDir);
+        llvm::sys::path::append(stub, file);
+        
+        if (!llvm::sys::fs::exists(stub))
+        {
+            mem->addFile(stub, 0, llvm::MemoryBuffer::getMemBuffer("", stub));
+        }
+    }
+    
+    auto overlay = llvm::makeIntrusiveRefCnt<llvm::vfs::OverlayFileSystem>(llvm::vfs::getRealFileSystem());
+    overlay->pushOverlay(mem);
+    
     tooling::FixedCompilationDatabase compilations(repoRoot, *flags);
-    tooling::ClangTool tool(compilations, marked);
+    tooling::ClangTool tool(compilations, marked, std::make_shared<PCHContainerOperations>(), overlay);
     Scythe::ReflectionActionFactory factory(visitorContext);
     const int result = tool.run(&factory);
     if (result != 0) return result; // failed parse
+    
+    int errors = 0;
+    for (const auto& c : visitorContext.reflectionModel)
+    {
+        if (c.generatedBodyLine == 0) ++errors;
+    }
+    if (errors != 0) return 1;
+    
+    if (!emitDir.empty())
+    {
+        for (const ClassInfo& classInfo : visitorContext.reflectionModel)
+        {
+            const auto files = EmitClass(classInfo);
+            WriteIfChanged(emitDir + "/" + classInfo.name + ".generated.h", files.header);
+            WriteIfChanged(emitDir + "/" + classInfo.name + ".gen.cpp", files.source);
+        }
+    }
     
     // --- temp. model dump ---
     for (const auto& classInfo : visitorContext.reflectionModel)
