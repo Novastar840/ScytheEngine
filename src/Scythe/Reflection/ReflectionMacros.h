@@ -16,7 +16,7 @@
 
 // IDE Fallback (IntelliSense/Clangd)
 // Prevents red squiggles on a clean checkout before the tool has run.
-#if defined(__INTELLISENSE__) || defined(__clangd__)
+#if defined(__INTELLISENSE__) || defined(__clangd__) || defined(__RESHARPER__) || defined(__CLION_IDE__)
     #undef GENERATED_BODY
-    #define GENERATED_BODY() public:
+    #define GENERATED_BODY()
 #endif
