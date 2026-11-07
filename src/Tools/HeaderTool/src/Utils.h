@@ -1,4 +1,6 @@
 #pragma once
+#include <filesystem>
+#include <fstream>
 
 namespace Scythe::HeaderTool
 {
@@ -220,22 +222,35 @@ namespace Scythe::HeaderTool
         return {};
     }
     
-    // Converts an absolute source-file path to a repo-relative, slash-normalized
-    // one. Model output must never embed machine-specific absolute paths
-    // (design doc §12: deterministic output across machines/CI).
-    inline std::string MakeRepoRelative(std::string absolute, std::string repoRoot)
+    inline std::string MakeRepoRelative(const std::string& absolute, const std::string& repoRoot)
     {
-        llvm::sys::path::convert_to_slash(absolute);                                                                                                                                                                                                                    
-        llvm::sys::path::convert_to_slash(repoRoot);                                                                                                                                                                                                                    
-        while (repoRoot.size() > 1 && repoRoot.ends_with('/'))
-            repoRoot.pop_back();                                                                                                                                                                                                                                        
-                                                                                                                                                                                                                                                                      
-        const llvm::StringRef path(absolute); 
-
-        if (path.size() >= repoRoot.size() && path.take_front(repoRoot.size()).equals_insensitive(repoRoot))
-            return std::string(path.drop_front(repoRoot.size()).ltrim('/'));
-
-        return std::string(path); // outside the repo: keep as-is
+        std::error_code ec;   
+        std::filesystem::path path = std::filesystem::weakly_canonical(absolute, ec);
+        if (ec) path = absolute;
+        
+        std::filesystem::path relative = std::filesystem::weakly_canonical(repoRoot, ec);
+        if (ec) relative = repoRoot;
+        
+        std::string pathStr = path.generic_string();
+        std::string relativeStr = relative.generic_string();
+        
+        while (relativeStr.size() > 1 && (relativeStr.back() == '/' || relativeStr.back() == '\\'))
+            relativeStr.pop_back();
+        
+        std::string pathLower = pathStr;
+        std::string relativeLower = relativeStr;
+        std::ranges::transform(pathLower, pathLower.begin(), tolower);
+        std::ranges::transform(relativeLower, relativeLower.begin(), tolower);
+        
+        if (pathLower.starts_with(relativeLower) &&
+            (pathLower.size() == relativeLower.size() || pathLower[relativeLower.size()] == '/'))
+        {
+            std::string rel = pathStr.substr(relativeStr.size());
+            if (!rel.empty() && (rel[0] == '/' || rel[0] == '\\'))
+                rel.erase(0, 1);
+            return rel;
+        }
+        return pathStr;
     }
     
     inline std::map<std::string, std::string> ParseKeyValueArgs(const std::string& args)
@@ -270,5 +285,31 @@ namespace Scythe::HeaderTool
         }
         saveAndFlush();
         return out;
+    }
+
+    inline bool WriteIfChanged(const std::string& path, const std::string& text)
+    {
+        std::ifstream in(path, std::ios::binary);
+        if (in)
+        {
+            const std::string current((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+            if (current == text) return false;
+        }
+        std::ofstream out(path, std::ios::binary | std::ios::trunc);
+        out << text;
+        return true;
+    }
+
+    static const char* ReadTextFile(const std::string& filePath)
+    {
+        std::ifstream file(filePath);
+
+        if (!file.is_open())
+            throw std::runtime_error("Failed to open file: " + filePath);
+
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+
+        return buffer.str().c_str();
     }
 }

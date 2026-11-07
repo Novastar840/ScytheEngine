@@ -355,11 +355,29 @@ int main(int argc, const char** argv)
     
     if (!emitDir.empty())
     {
-        for (const ClassInfo& classInfo : visitorContext.reflectionModel)
+        // needed if more than one Scythe classes are declared in the same header.
+        std::unordered_map<std::string, std::vector<const ClassInfo*>> classesSortedByHeader;
+        for (const auto& info : visitorContext.reflectionModel)
         {
-            const auto files = EmitClass(classInfo);
-            WriteIfChanged(emitDir + "/" + classInfo.name + ".generated.h", files.header);
-            WriteIfChanged(emitDir + "/" + classInfo.name + ".gen.cpp", files.source);
+            classesSortedByHeader[info.headerPath].push_back(&info);
+            llvm::outs() << "Added path = " << info.headerPath << "\n";
+        }
+            
+
+        const std::vector<const ClassInfo*> none;
+        for (const std::string& header : marked)
+        {
+            const std::string relativePath = MakeRepoRelative(header, repoRoot);
+            llvm::outs() << "relative path (searching) = " << relativePath << "\n";
+            const auto it = classesSortedByHeader.find(relativePath);
+            const std::vector<const ClassInfo*>& classes = (it != classesSortedByHeader.end()) ? it->second : none;
+
+            llvm::SmallString<256> stem(llvm::sys::path::filename(relativePath));
+            llvm::sys::path::replace_extension(stem, "");
+
+            const auto files = EmitHeader(relativePath, classes);
+            WriteIfChanged(emitDir + "/" + std::string(stem.str()) + ".generated.h", files.header);
+            WriteIfChanged(emitDir + "/" + std::string(stem.str()) + ".gen.cpp",   files.source);
         }
     }
     

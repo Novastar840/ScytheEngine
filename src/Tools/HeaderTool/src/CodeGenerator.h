@@ -11,6 +11,6 @@ namespace Scythe::HeaderTool
         std::string source;
     };
     
-    GeneratedFiles EmitClass(const ClassInfo& classInfo);
+    GeneratedFiles EmitHeader(const std::string& headerPath, const std::vector<const ClassInfo*>& classes);
     bool WriteIfChanged(const std::string& path, const std::string& text);
 }
