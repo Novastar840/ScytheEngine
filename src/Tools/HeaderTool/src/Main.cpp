@@ -308,6 +308,8 @@ int main(int argc, const char** argv)
     if (marked.empty())
         return 0;
     
+    for (const auto& h : marked) CheckAndInsertGeneratedHeaderInclude(h);
+    
     const bool havePch = !Pch.empty() && llvm::sys::fs::exists(Pch);
     auto flags = BuildFlagsFromCompileCommands(
         compileCommandsPath,
@@ -360,7 +362,6 @@ int main(int argc, const char** argv)
         for (const auto& info : visitorContext.reflectionModel)
         {
             classesSortedByHeader[info.headerPath].push_back(&info);
-            llvm::outs() << "Added path = " << info.headerPath << "\n";
         }
             
 
@@ -368,7 +369,6 @@ int main(int argc, const char** argv)
         for (const std::string& header : marked)
         {
             const std::string relativePath = MakeRepoRelative(header, repoRoot);
-            llvm::outs() << "relative path (searching) = " << relativePath << "\n";
             const auto it = classesSortedByHeader.find(relativePath);
             const std::vector<const ClassInfo*>& classes = (it != classesSortedByHeader.end()) ? it->second : none;
 

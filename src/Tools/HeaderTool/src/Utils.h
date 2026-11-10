@@ -300,9 +300,9 @@ namespace Scythe::HeaderTool
         return true;
     }
 
-    static const char* ReadTextFile(const std::string& filePath)
+    inline std::string ReadTextFile(const std::string& filePath)
     {
-        std::ifstream file(filePath);
+        std::ifstream file(filePath, std::ios::binary);
 
         if (!file.is_open())
             throw std::runtime_error("Failed to open file: " + filePath);
@@ -310,6 +310,135 @@ namespace Scythe::HeaderTool
         std::stringstream buffer;
         buffer << file.rdbuf();
 
-        return buffer.str().c_str();
+        return buffer.str();
+    }
+    
+    struct CommentBlock
+    {
+        std::string::size_type start = std::string::npos;
+        std::string::size_type end = std::string::npos;
+    };
+    
+    inline bool IsPositionInCommentBlock(const std::vector<CommentBlock>& blocks, std::string::size_type pos)
+    {
+        for (const CommentBlock& block : blocks)
+        {
+            if (block.start <= pos && pos < block.end) return true;
+        }
+        return false;
+    }
+    
+    inline bool IsRangeInCommentBlock(const std::vector<CommentBlock>& blocks, std::string::size_type start, std::string::size_type end)
+    {
+        for (const CommentBlock& block : blocks)
+        {
+            if (block.start < start && start < block.end && 
+                block.start < end && end < block.end) 
+                return true;
+        }
+        return false;
+    }
+    
+    inline std::vector<CommentBlock> GetAllCommentBlocks(std::string_view text)
+    {
+        if (text.size() < 4) return {};
+        
+        constexpr auto openComment = "/*";
+        constexpr auto closeComment = "*/";
+        
+        std::list<CommentBlock> blocks;
+        bool inComment = false;
+        
+        for (std::string::size_type pos = 0; pos < text.size();)
+        {
+            if (inComment)
+            {
+                pos = text.find(closeComment, pos);
+                if (pos == std::string::npos) break;
+                inComment = false;
+                CommentBlock& last = blocks.back();
+                if (last.end == std::string::npos)
+                    last.end = pos;
+            }
+            else
+            {
+                pos = text.find(openComment, pos);
+                if (pos == std::string::npos) break;
+                inComment = true;
+                pos += 2;
+                blocks.emplace_back(CommentBlock{pos, std::string::npos});
+            }
+        }
+        
+        std::vector<CommentBlock> out;
+        out.reserve(blocks.size());
+        
+        for (const CommentBlock& block : blocks)
+        {
+            out.push_back(block);
+        }
+        
+        return out;
+    }
+    
+    inline void CheckAndInsertGeneratedHeaderInclude(const std::string& filePath)
+    {
+        using size_type = std::string::size_type;
+        
+        std::string text = ReadTextFile(filePath);
+        std::vector<CommentBlock> commentBlocks = GetAllCommentBlocks(text);
+        
+        std::filesystem::path gen = std::filesystem::path(filePath).filename();
+        gen.replace_extension("generated.h");
+        const std::string name = gen.string();
+        const std::string quoted = '"' + name + '"';
+
+        std::optional<size_type> lastIncludeLine;
+        for (size_type lineStart = 0; lineStart < text.size(); )
+        {
+            size_type lineEnd = text.find('\n', lineStart);
+            if (lineEnd == std::string::npos) lineEnd = text.size();
+
+            const std::string_view raw(text.data() + lineStart, lineEnd - lineStart);
+            const auto firstNonWs = raw.find_first_not_of(" \t\r");
+            if (firstNonWs != std::string_view::npos)
+            {
+                const std::string_view tView = raw.substr(firstNonWs, raw.find_last_not_of(" \t\r") - firstNonWs + 1);
+                if (tView.starts_with("#include"))
+                {
+                    const size_type hashPos = lineStart + firstNonWs;
+                    const bool inComment = !commentBlocks.empty() && IsPositionInCommentBlock(commentBlocks, hashPos);
+                    if (!inComment)
+                    {
+                        lastIncludeLine = lineStart;
+                        if (tView.find(quoted) != std::string_view::npos) return; // generated header include already present
+                    }
+                }
+            }
+            if (lineEnd == text.size()) break;
+            lineStart = lineEnd + 1;
+        }
+        
+        size_t lineEnd;
+        if (!lastIncludeLine)
+        {
+            size_type pos = text.find("#pragma once");
+            if (pos == std::string::npos)
+            {
+                llvm::errs() << "[SHT] warning: cannot insert: " << "#include " + quoted << "in " << filePath << "\n";
+                return;
+            }
+            lineEnd = text.find('\n', pos);
+        }
+        else
+        {
+            lineEnd = text.find('\n', *lastIncludeLine);
+        }
+        const std::string eol = (lineEnd != std::string::npos && lineEnd > 0 && text[lineEnd - 1] == '\r') ? "\r\n" : "\n";
+        const size_t insertAt = (lineEnd == std::string::npos) ? text.size() : lineEnd + 1;
+        text.insert(insertAt, eol + "#include " + quoted + eol);
+
+        if (WriteIfChanged(filePath, text))
+            llvm::outs() << "[SHT] inserted #include " << quoted << " into " << filePath << "\n";
     }
 }
